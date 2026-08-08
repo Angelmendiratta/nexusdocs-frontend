@@ -101,16 +101,17 @@
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, opacity 0.15s ease;
   }
-  .btn:hover { background: var(--steel-dark); }
+  .btn:hover:not(:disabled) { background: var(--steel-dark); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .btn-ghost {
     background: transparent;
     color: var(--steel);
     border: 1px solid var(--line);
   }
-  .btn-ghost:hover { background: var(--paper); }
+  .btn-ghost:hover:not(:disabled) { background: var(--paper); }
   .auth-toggle {
     margin-top: 18px;
     text-align: center;
@@ -247,7 +248,7 @@
     padding: 18px;
     margin-bottom: 24px;
   }
-  .new-item-form input, .new-item-form textarea {
+  .new-item-form input[type="text"], .new-item-form textarea {
     width: 100%;
     padding: 9px 11px;
     border: 1px solid var(--line);
@@ -277,6 +278,9 @@
     font-size: 19px;
     font-weight: 600;
     margin: 0 0 6px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   .doc-preview {
     font-family: var(--serif);
@@ -352,23 +356,6 @@
     margin-top: 4px;
   }
 
-  .activity-feed {
-    margin-top: 40px;
-    padding-top: 24px;
-    border-top: 1px solid var(--line);
-  }
-  .activity-item {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-soft);
-    padding: 6px 0;
-    display: flex;
-    gap: 10px;
-  }
-  .activity-tag {
-    color: var(--gold);
-    flex-shrink: 0;
-  }
   .toast {
     position: fixed;
     bottom: 24px;
@@ -458,8 +445,6 @@
 
 <script>
 // ============ CONFIG ============
-// Set this to your deployed Solarch backend URL (Railway, Render, etc.)
-// e.g. "https://nexusdocs-production.up.railway.app"
 const API_BASE = window.__NEXUSDOCS_API_BASE__ || "http://localhost:8090";
 
 // ============ STATE ============
@@ -471,20 +456,22 @@ let state = {
   documents: [],
   activeDocument: null,
   comments: [],
-  activity: [],
-  mode: 'login' // or 'signup'
+  mode: 'login'
 };
 
 // ============ API HELPERS ============
 async function api(path, opts = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  const isFormData = opts.body instanceof FormData;
+  const headers = { ...(opts.headers || {}) };
+  
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
   if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    // Solarch returns field-level errors in `data` (an array of {field, message}) or
-    // `errors` (create endpoint's format) alongside the generic top-level `message`.
-    // Surface the specific reason instead of just "Validation failed."
     const details = data.data || data.errors;
     if (Array.isArray(details) && details.length) {
       const msg = details.map(d => friendlyFieldError(d)).join('; ');
@@ -495,8 +482,6 @@ async function api(path, opts = {}) {
   return data;
 }
 
-// Backend validation messages are technical (e.g. "Value must be unique"); translate the
-// common ones into plain language so the person understands what actually went wrong.
 function friendlyFieldError(d) {
   const field = d.field || '';
   const msg = d.message || '';
@@ -552,6 +537,10 @@ authToggleBtn.addEventListener('click', () => {
 authForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   authError.style.display = 'none';
+  authSubmit.disabled = true;
+  const originalText = authSubmit.textContent;
+  authSubmit.textContent = state.mode === 'signup' ? 'Signing up...' : 'Signing in...';
+
   const email = document.getElementById('email-input').value.trim();
   const password = document.getElementById('password-input').value;
   const name = document.getElementById('name-input').value.trim();
@@ -581,6 +570,9 @@ authForm.addEventListener('submit', async (e) => {
       authError.innerHTML = err.message.replace('Try signing in instead.', '<button type="button" id="switch-to-signin" style="background:none;border:none;color:inherit;text-decoration:underline;font-weight:600;cursor:pointer;padding:0;font-size:13px;font-family:inherit;">Sign in instead</button>');
       document.getElementById('switch-to-signin').addEventListener('click', () => authToggleBtn.click());
     }
+  } finally {
+    authSubmit.disabled = false;
+    authSubmit.textContent = originalText;
   }
 });
 
@@ -628,9 +620,13 @@ function renderWorkspaceList() {
 }
 
 document.getElementById('create-workspace-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('create-workspace-btn');
   const input = document.getElementById('new-workspace-name');
   const wname = input.value.trim();
   if (!wname) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
   try {
     const ws = await api('/api/collections/workspaces/records', {
       method: 'POST',
@@ -642,6 +638,9 @@ document.getElementById('create-workspace-btn').addEventListener('click', async 
     toast('Workspace created');
   } catch (err) {
     toast('Failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '+ Create workspace';
   }
 });
 
@@ -657,7 +656,7 @@ async function selectWorkspace(ws) {
 async function loadDocuments() {
   try {
     const filter = encodeURIComponent(`workspace="${state.activeWorkspace.id}"`);
-    const res = await api(`/api/collections/documents/records?filter=${filter}&sort=-created`);
+    const res = await api(`/api/collections/documents/records?filter=${filter}&sort=-created&expand=author`);
     state.documents = res.items || [];
   } catch (err) {
     toast('Failed to load documents: ' + err.message);
@@ -667,13 +666,20 @@ async function loadDocuments() {
 
 function renderDocumentList() {
   const main = document.getElementById('main-content');
-  const docCards = state.documents.map(doc => `
-    <div class="doc-card" data-id="${doc.id}">
-      <div class="doc-title">${escapeHtml(doc.title)}</div>
-      <p class="doc-preview">${escapeHtml((doc.content || '').slice(0, 140))}${(doc.content||'').length > 140 ? '…' : ''}</p>
-      <div class="doc-meta">${new Date(doc.created).toLocaleDateString()} · ${doc.id}</div>
-    </div>
-  `).join('') || '<div class="empty-state">No documents yet in this workspace. Create the first one below.</div>';
+  const docCards = state.documents.map(doc => {
+    const authorName = doc.expand?.author?.name || doc.expand?.author?.email || doc.author || 'Unknown';
+    const hasFile = !!(doc.file || doc.attachment);
+    return `
+      <div class="doc-card" data-id="${doc.id}">
+        <div class="doc-title">
+          <span>${escapeHtml(doc.title)}</span>
+          ${hasFile ? '<span style="font-size:12px; color:var(--gold); font-family:var(--mono);">📎 Attachment</span>' : ''}
+        </div>
+        <p class="doc-preview">${escapeHtml((doc.content || '').slice(0, 140))}${(doc.content||'').length > 140 ? '…' : ''}</p>
+        <div class="doc-meta">By ${escapeHtml(authorName)} · ${new Date(doc.created).toLocaleDateString()}</div>
+      </div>
+    `;
+  }).join('') || '<div class="empty-state">No documents yet in this workspace. Create the first one below.</div>';
 
   main.innerHTML = `
     <div class="main-header">
@@ -686,6 +692,10 @@ function renderDocumentList() {
     <div class="new-item-form">
       <input type="text" id="new-doc-title" placeholder="Document title">
       <textarea id="new-doc-content" placeholder="Write something..."></textarea>
+      <div class="field" style="margin-bottom:12px;">
+        <label style="display:block; font-size:11px; font-family:var(--mono); color:var(--muted); margin-bottom:4px; text-transform:uppercase;">Attach File (Optional)</label>
+        <input type="file" id="new-doc-file" style="background:var(--paper); padding:6px; font-size:13px; width:100%; border:1px solid var(--line); border-radius:var(--radius);">
+      </div>
       <div class="form-row">
         <button class="btn" id="create-doc-btn" style="width:auto;">+ Add document</button>
       </div>
@@ -701,19 +711,40 @@ function renderDocumentList() {
 }
 
 async function createDocument() {
+  const btn = document.getElementById('create-doc-btn');
   const title = document.getElementById('new-doc-title').value.trim();
   const content = document.getElementById('new-doc-content').value.trim();
+  const fileInput = document.getElementById('new-doc-file');
+  const file = fileInput?.files[0];
+
   if (!title) return;
+
+  btn.disabled = true;
+  btn.textContent = file ? 'Uploading & Creating...' : 'Creating...';
+
   try {
-    await api('/api/collections/documents/records', {
-      method: 'POST',
-      body: JSON.stringify({
+    let body;
+    if (file) {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('content', content);
+      formData.append('workspace', state.activeWorkspace.id);
+      formData.append('author', state.user.id);
+      formData.append('file', file);
+      body = formData;
+    } else {
+      body = JSON.stringify({
         title, content,
         workspace: state.activeWorkspace.id,
         author: state.user.id
-      })
+      });
+    }
+
+    await api('/api/collections/documents/records', {
+      method: 'POST',
+      body
     });
-    // application-layer activity log (Solarch's pb_hooks don't fire on create — see backend README)
+
     await api('/api/collections/activity_log/records', {
       method: 'POST',
       body: JSON.stringify({
@@ -721,11 +752,15 @@ async function createDocument() {
         user: state.user.id, workspace: state.activeWorkspace.id
       })
     }).catch(() => {});
+
     await loadDocuments();
     renderDocumentList();
     toast('Document created');
   } catch (err) {
     toast('Failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '+ Add document';
   }
 }
 
@@ -740,7 +775,7 @@ async function openDocument(id) {
 async function loadComments(documentId) {
   try {
     const filter = encodeURIComponent(`document="${documentId}"`);
-    const res = await api(`/api/collections/comments/records?filter=${filter}&sort=created`);
+    const res = await api(`/api/collections/comments/records?filter=${filter}&sort=created&expand=author`);
     state.comments = res.items || [];
   } catch (err) {
     state.comments = [];
@@ -750,18 +785,36 @@ async function loadComments(documentId) {
 function renderDocumentDetail() {
   const doc = state.activeDocument;
   const main = document.getElementById('main-content');
-  const commentsHtml = state.comments.map(c => `
-    <div class="comment">
-      ${escapeHtml(c.text)}
-      <div class="comment-meta">${new Date(c.created).toLocaleString()}</div>
-    </div>
-  `).join('') || '<div style="color:var(--muted); font-size:13px;">No comments yet.</div>';
+  const docAuthor = doc.expand?.author?.name || doc.expand?.author?.email || doc.author || 'Unknown';
+  const fileName = doc.file || doc.attachment;
+  const fileUrl = fileName ? `${API_BASE}/api/files/documents/${doc.id}/${fileName}` : null;
+
+  const commentsHtml = state.comments.map(c => {
+    const commentAuthor = c.expand?.author?.name || c.expand?.author?.email || c.author || 'Anonymous';
+    return `
+      <div class="comment">
+        ${escapeHtml(c.text)}
+        <div class="comment-meta">By ${escapeHtml(commentAuthor)} · ${new Date(c.created).toLocaleString()}</div>
+      </div>
+    `;
+  }).join('') || '<div style="color:var(--muted); font-size:13px;">No comments yet.</div>';
 
   main.innerHTML = `
     <button class="back-link" id="back-to-list">← Back to ${escapeHtml(state.activeWorkspace.wname)}</button>
     <div class="doc-detail">
       <h1 class="doc-detail-title">${escapeHtml(doc.title)}</h1>
-      <div class="doc-detail-meta">CREATED ${new Date(doc.created).toLocaleString()} · ${doc.id}</div>
+      <div class="doc-detail-meta">BY ${escapeHtml(docAuthor)} · CREATED ${new Date(doc.created).toLocaleString()}</div>
+
+      ${fileUrl ? `
+        <div style="margin-bottom:24px; padding:12px 16px; background:var(--gold-soft); border:1px solid #E8D8A0; border-radius:var(--radius); display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:16px;">📎</span>
+            <span style="font-size:13px; font-weight:600; color:var(--ink);">${escapeHtml(fileName)}</span>
+          </div>
+          <a href="${fileUrl}" target="_blank" download class="btn" style="width:auto; padding:6px 14px; font-size:12px; text-decoration:none;">Download</a>
+        </div>
+      ` : ''}
+
       <div class="doc-detail-content">${escapeHtml(doc.content || '(no content)')}</div>
 
       <div class="comments-label">Comments (${state.comments.length})</div>
@@ -784,8 +837,13 @@ function renderDocumentDetail() {
 }
 
 async function addComment() {
+  const btn = document.getElementById('add-comment-btn');
   const text = document.getElementById('new-comment-text').value.trim();
   if (!text) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Posting...';
+
   try {
     await api('/api/collections/comments/records', {
       method: 'POST',
@@ -803,6 +861,9 @@ async function addComment() {
     toast('Comment posted');
   } catch (err) {
     toast('Failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Post comment';
   }
 }
 
