@@ -655,7 +655,7 @@ async function selectWorkspace(ws) {
 // ============ DOCUMENTS ============
 async function loadDocuments() {
   try {
-    const filter = encodeURIComponent(`workspace="${state.activeWorkspace.id}"`);
+    const filter = encodeURIComponent(`workspace='${state.activeWorkspace.id}'`);
     const res = await api(`/api/collections/documents/records?filter=${filter}&sort=-created&expand=author`);
     state.documents = res.items || [];
   } catch (err) {
@@ -774,7 +774,7 @@ async function openDocument(id) {
 
 async function loadComments(documentId) {
   try {
-    const filter = encodeURIComponent(`document="${documentId}"`);
+    const filter = encodeURIComponent(`document='${documentId}'`);
     const res = await api(`/api/collections/comments/records?filter=${filter}&sort=created&expand=author`);
     state.comments = res.items || [];
   } catch (err) {
