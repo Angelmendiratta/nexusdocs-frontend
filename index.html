@@ -456,7 +456,8 @@ let state = {
   documents: [],
   activeDocument: null,
   comments: [],
-  mode: 'login'
+  mode: 'login',
+  isEditing: false
 };
 
 // ============ API HELPERS ============
@@ -647,6 +648,7 @@ document.getElementById('create-workspace-btn').addEventListener('click', async 
 async function selectWorkspace(ws) {
   state.activeWorkspace = ws;
   state.activeDocument = null;
+  state.isEditing = false;
   renderWorkspaceList();
   await loadDocuments();
   renderDocumentList();
@@ -689,13 +691,16 @@ function renderDocumentList() {
       </div>
     </div>
 
-    <div class="new-item-form">
+    <div class="new-item-form" style="border: 2px solid var(--steel); background: #F8FAFC;">
+      <div style="font-family:var(--mono); font-size:11px; color:var(--steel); margin-bottom:10px; font-weight:bold; text-transform:uppercase;">Create New Document</div>
       <input type="text" id="new-doc-title" placeholder="Document title">
       <textarea id="new-doc-content" placeholder="Write something..."></textarea>
-      <div class="field" style="margin-bottom:12px;">
-        <label style="display:block; font-size:11px; font-family:var(--mono); color:var(--muted); margin-bottom:4px; text-transform:uppercase;">Attach File (Optional)</label>
-        <input type="file" id="new-doc-file" style="background:var(--paper); padding:6px; font-size:13px; width:100%; border:1px solid var(--line); border-radius:var(--radius);">
+      
+      <div class="field" style="margin-bottom:16px; background:var(--paper-raised); padding:10px; border:1px dashed var(--line); border-radius:var(--radius);">
+        <label style="display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:6px;">📎 Upload Attachment (Optional)</label>
+        <input type="file" id="new-doc-file" style="background:var(--paper); padding:6px; font-size:13px; width:100%; border:1px solid var(--line); border-radius:var(--radius); cursor:pointer;">
       </div>
+      
       <div class="form-row">
         <button class="btn" id="create-doc-btn" style="width:auto;">+ Add document</button>
       </div>
@@ -768,6 +773,7 @@ async function openDocument(id) {
   const doc = state.documents.find(d => d.id === id);
   if (!doc) return;
   state.activeDocument = doc;
+  state.isEditing = false;
   await loadComments(id);
   renderDocumentDetail();
 }
@@ -785,6 +791,29 @@ async function loadComments(documentId) {
 function renderDocumentDetail() {
   const doc = state.activeDocument;
   const main = document.getElementById('main-content');
+  
+  if (state.isEditing) {
+    main.innerHTML = `
+      <button class="back-link" id="cancel-edit-btn">← Cancel Editing</button>
+      <div class="doc-detail">
+        <div style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase;">Editing Document</div>
+        <input type="text" id="edit-doc-title" value="${escapeHtml(doc.title)}" style="width:100%; padding:10px; font-size:20px; font-family:var(--serif); font-weight:bold; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:12px;">
+        <textarea id="edit-doc-content" style="width:100%; min-height:250px; padding:12px; font-size:15px; font-family:var(--serif); border:1px solid var(--line); border-radius:var(--radius); resize:vertical;">${escapeHtml(doc.content || '')}</textarea>
+        
+        <div style="margin-top:16px; display:flex; gap:12px;">
+          <button class="btn" id="save-doc-btn" style="width:auto; background:var(--steel);">Save Changes</button>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+      state.isEditing = false;
+      renderDocumentDetail();
+    });
+    document.getElementById('save-doc-btn').addEventListener('click', saveDocument);
+    return;
+  }
+
   const docAuthor = doc.expand?.author?.name || doc.expand?.author?.email || doc.author || 'Unknown';
   const fileName = doc.file || doc.attachment;
   const fileUrl = fileName ? `${API_BASE}/api/files/documents/${doc.id}/${fileName}` : null;
@@ -802,7 +831,13 @@ function renderDocumentDetail() {
   main.innerHTML = `
     <button class="back-link" id="back-to-list">← Back to ${escapeHtml(state.activeWorkspace.wname)}</button>
     <div class="doc-detail">
-      <h1 class="doc-detail-title">${escapeHtml(doc.title)}</h1>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+        <h1 class="doc-detail-title" style="margin:0;">${escapeHtml(doc.title)}</h1>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost" id="edit-mode-btn" style="padding:6px 14px; font-size:12px; width:auto;">Edit</button>
+          <button class="btn" id="delete-doc-btn" style="padding:6px 14px; font-size:12px; width:auto; background:var(--danger);">Delete</button>
+        </div>
+      </div>
       <div class="doc-detail-meta">BY ${escapeHtml(docAuthor)} · CREATED ${new Date(doc.created).toLocaleString()}</div>
 
       ${fileUrl ? `
@@ -831,8 +866,14 @@ function renderDocumentDetail() {
 
   document.getElementById('back-to-list').addEventListener('click', () => {
     state.activeDocument = null;
+    state.isEditing = false;
     renderDocumentList();
   });
+  document.getElementById('edit-mode-btn').addEventListener('click', () => {
+    state.isEditing = true;
+    renderDocumentDetail();
+  });
+  document.getElementById('delete-doc-btn').addEventListener('click', deleteDocument);
   document.getElementById('add-comment-btn').addEventListener('click', addComment);
 }
 
@@ -862,8 +903,64 @@ async function addComment() {
   } catch (err) {
     toast('Failed: ' + err.message);
   } finally {
+    if(btn) {
+      btn.disabled = false;
+      btn.textContent = 'Post comment';
+    }
+  }
+}
+
+async function saveDocument() {
+  const btn = document.getElementById('save-doc-btn');
+  const title = document.getElementById('edit-doc-title').value.trim();
+  const content = document.getElementById('edit-doc-content').value.trim();
+
+  if (!title) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    await api(`/api/collections/documents/records/${state.activeDocument.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title, content })
+    });
+    
+    state.activeDocument.title = title;
+    state.activeDocument.content = content;
+    state.isEditing = false;
+    
+    renderDocumentDetail();
+    toast('Document updated successfully');
+  } catch (err) {
+    toast('Failed to update: ' + err.message);
     btn.disabled = false;
-    btn.textContent = 'Post comment';
+    btn.textContent = 'Save Changes';
+  }
+}
+
+async function deleteDocument() {
+  if (!confirm(`Are you sure you want to delete "${state.activeDocument.title}"?`)) return;
+
+  const btn = document.getElementById('delete-doc-btn');
+  btn.disabled = true;
+  btn.textContent = 'Deleting...';
+
+  try {
+    await api(`/api/collections/documents/records/${state.activeDocument.id}`, {
+      method: 'DELETE'
+    });
+    
+    toast('Document deleted');
+    state.activeDocument = null;
+    state.isEditing = false;
+    
+    await loadDocuments();
+    renderDocumentList();
+  } catch (err) {
+    toast('Failed to delete: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Delete';
   }
 }
 
