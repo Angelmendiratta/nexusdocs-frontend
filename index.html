@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusDocs — Team Knowledge Base</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+  :root {
+    --ink: #1B263B;
+    --ink-soft: #445069;
+    --muted: #7C8CA5;
+    --paper: #F2F4F1;
+    --paper-raised: #FFFFFF;
+    --line: #DCE1DC;
+    --steel: #3D5A80;
+    --steel-dark: #2C4360;
+    --gold: #B8860B;
+    --gold-soft: #FBF3DF;
+    --danger: #A8423F;
+    --radius: 3px;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+
+  /* ---------- Auth screen ---------- */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .auth-card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 40px 36px;
+  }
+  .auth-mark {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .auth-title {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 28px 0;
+    line-height: 1.2;
+  }
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+  }
+  .field input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 14px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--steel);
+    background: var(--paper-raised);
+  }
+  .btn {
+    width: 100%;
+    padding: 11px;
+    background: var(--steel);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn:hover { background: var(--steel-dark); }
+  .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--steel);
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover { background: var(--paper); }
+  .auth-toggle {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .auth-toggle button {
+    background: none;
+    border: none;
+    color: var(--steel);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: var(--sans);
+    text-decoration: underline;
+    padding: 0;
+  }
+  .auth-error {
+    background: #FBEAEA;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  /* ---------- App shell ---------- */
+  #app-screen { display: none; min-height: 100vh; }
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--ink);
+    color: #C7D0E0;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .brand {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .brand-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 28px;
+  }
+  .nav-section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6B7A97;
+    margin: 18px 0 8px 0;
+  }
+  .workspace-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: #C7D0E0;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    cursor: pointer;
+    font-family: var(--sans);
+    margin-bottom: 2px;
+  }
+  .workspace-item:hover { background: rgba(255,255,255,0.06); }
+  .workspace-item.active { background: var(--steel); color: white; }
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-size: 13px;
+  }
+  .sidebar-user { color: #fff; font-weight: 600; margin-bottom: 8px; }
+  .sidebar-footer button {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #C7D0E0;
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .sidebar-footer button:hover { border-color: var(--gold); color: var(--gold); }
+
+  .main {
+    flex: 1;
+    padding: 40px 48px;
+    max-width: 900px;
+  }
+  .main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .main-title {
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .main-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin: 4px 0 32px 0;
+  }
+  .empty-state {
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    padding: 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .new-item-form {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 24px;
+  }
+  .new-item-form input, .new-item-form textarea {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 14px;
+    margin-bottom: 10px;
+    background: var(--paper);
+  }
+  .new-item-form textarea { min-height: 70px; resize: vertical; font-family: var(--serif); }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .btn { width: auto; padding: 9px 18px; }
+
+  .doc-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--steel);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: border-color 0.12s ease;
+  }
+  .doc-card:hover { border-left-color: var(--gold); }
+  .doc-title {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+  }
+  .doc-preview {
+    font-family: var(--serif);
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0 0 10px 0;
+  }
+  .doc-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .doc-detail {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--steel);
+    text-decoration: none;
+    margin-bottom: 20px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .doc-detail-title {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+  }
+  .doc-detail-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .doc-detail-content {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink);
+    white-space: pre-wrap;
+    margin-bottom: 32px;
+  }
+  .comments-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .comment {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .comment:last-child { border-bottom: none; }
+  .comment-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .activity-feed {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+  .activity-item {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding: 6px 0;
+    display: flex;
+    gap: 10px;
+  }
+  .activity-tag {
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--ink);
+    color: white;
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: var(--sans);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 720px) {
+    .shell { flex-direction: column; }
+    .sidebar { width: 100%; }
+    .main { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-mark">NexusDocs</div>
+    <h1 class="auth-title" id="auth-title">Sign in</h1>
+    <div id="auth-error" class="auth-error" style="display:none;"></div>
+    <form id="auth-form">
+      <div class="field" id="name-field" style="display:none;">
+        <label>Name</label>
+        <input type="text" id="name-input" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="email-input" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password-input" autocomplete="current-password" required minlength="8">
+        <div id="password-hint" style="font-size:11px; color:var(--muted); margin-top:4px; display:none;">Must be at least 8 characters.</div>
+      </div>
+      <button type="submit" class="btn" id="auth-submit">Sign in</button>
+    </form>
+    <div class="auth-toggle">
+      <span id="auth-toggle-text">Don't have an account?</span>
+      <button id="auth-toggle-btn" type="button">Sign up</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app-screen">
+  <div class="shell">
+    <div class="sidebar">
+      <div class="brand">NexusDocs</div>
+      <div class="brand-tag">Team Knowledge Base</div>
+
+      <div class="nav-section-label">Workspaces</div>
+      <div id="workspace-list"></div>
+
+      <div class="new-item-form" style="background:transparent; border:none; padding:12px 0 0 0;">
+        <input type="text" id="new-workspace-name" placeholder="New workspace name" style="background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.15); color:#fff;">
+        <button class="btn btn-ghost" id="create-workspace-btn" style="color:#C7D0E0; border-color:rgba(255,255,255,0.2);">+ Create workspace</button>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="sidebar-user-name"></div>
+        <button id="logout-btn">Sign out</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div id="main-content">
+        <div class="empty-state">Select or create a workspace to get started.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ CONFIG ============
+// Set this to your deployed Solarch backend URL (Railway, Render, etc.)
+// e.g. "https://nexusdocs-production.up.railway.app"
+const API_BASE = window.__NEXUSDOCS_API_BASE__ || "http://localhost:8090";
+
+// ============ STATE ============
+let state = {
+  token: localStorage.getItem('nd_token') || null,
+  user: JSON.parse(localStorage.getItem('nd_user') || 'null'),
+  workspaces: [],
+  activeWorkspace: null,
+  documents: [],
+  activeDocument: null,
+  comments: [],
+  activity: [],
+  mode: 'login' // or 'signup'
+};
+
+// ============ API HELPERS ============
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+  const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    // Solarch returns field-level errors in `data` (an array of {field, message}) or
+    // `errors` (create endpoint's format) alongside the generic top-level `message`.
+    // Surface the specific reason instead of just "Validation failed."
+    const details = data.data || data.errors;
+    if (Array.isArray(details) && details.length) {
+      const msg = details.map(d => friendlyFieldError(d)).join('; ');
+      throw new Error(msg);
+    }
+    throw new Error(data.message || `Request failed (${res.status})`);
+  }
+  return data;
+}
+
+// Backend validation messages are technical (e.g. "Value must be unique"); translate the
+// common ones into plain language so the person understands what actually went wrong.
+function friendlyFieldError(d) {
+  const field = d.field || '';
+  const msg = d.message || '';
+  if (field === 'email' && /unique/i.test(msg)) {
+    return 'This email is already registered. Try signing in instead.';
+  }
+  if (field === 'password' && /8 characters/i.test(msg)) {
+    return 'Password must be at least 8 characters.';
+  }
+  if (/unique/i.test(msg)) {
+    return `${field ? field + ': ' : ''}This value is already taken.`;
+  }
+  return `${field ? field + ': ' : ''}${msg}`;
+}
+
+// ============ TOAST ============
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ============ AUTH ============
+const authForm = document.getElementById('auth-form');
+const authTitle = document.getElementById('auth-title');
+const authSubmit = document.getElementById('auth-submit');
+const authToggleText = document.getElementById('auth-toggle-text');
+const authToggleBtn = document.getElementById('auth-toggle-btn');
+const nameField = document.getElementById('name-field');
+const authError = document.getElementById('auth-error');
+
+authToggleBtn.addEventListener('click', () => {
+  state.mode = state.mode === 'login' ? 'signup' : 'login';
+  if (state.mode === 'signup') {
+    authTitle.textContent = 'Create account';
+    authSubmit.textContent = 'Sign up';
+    authToggleText.textContent = 'Already have an account?';
+    authToggleBtn.textContent = 'Sign in';
+    nameField.style.display = 'block';
+    document.getElementById('password-hint').style.display = 'block';
+  } else {
+    authTitle.textContent = 'Sign in';
+    authSubmit.textContent = 'Sign in';
+    authToggleText.textContent = "Don't have an account?";
+    authToggleBtn.textContent = 'Sign up';
+    nameField.style.display = 'none';
+    document.getElementById('password-hint').style.display = 'none';
+  }
+  authError.style.display = 'none';
+});
+
+authForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  authError.style.display = 'none';
+  const email = document.getElementById('email-input').value.trim();
+  const password = document.getElementById('password-input').value;
+  const name = document.getElementById('name-input').value.trim();
+
+  try {
+    let result;
+    if (state.mode === 'signup') {
+      result = await api('/api/collections/users/records', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, passwordConfirm: password, name })
+      });
+    } else {
+      result = await api('/api/collections/users/auth-with-password', {
+        method: 'POST',
+        body: JSON.stringify({ identity: email, password })
+      });
+    }
+    state.token = result.token;
+    state.user = result.record || { id: result.record?.id, name, email };
+    localStorage.setItem('nd_token', state.token);
+    localStorage.setItem('nd_user', JSON.stringify(state.user));
+    enterApp();
+  } catch (err) {
+    authError.textContent = err.message;
+    authError.style.display = 'block';
+    if (state.mode === 'signup' && /already registered/i.test(err.message)) {
+      authError.innerHTML = err.message.replace('Try signing in instead.', '<button type="button" id="switch-to-signin" style="background:none;border:none;color:inherit;text-decoration:underline;font-weight:600;cursor:pointer;padding:0;font-size:13px;font-family:inherit;">Sign in instead</button>');
+      document.getElementById('switch-to-signin').addEventListener('click', () => authToggleBtn.click());
+    }
+  }
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  state.token = null;
+  state.user = null;
+  localStorage.removeItem('nd_token');
+  localStorage.removeItem('nd_user');
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+});
+
+// ============ APP ENTRY ============
+async function enterApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  document.getElementById('sidebar-user-name').textContent = state.user?.name || state.user?.email || 'You';
+  await loadWorkspaces();
+}
+
+// ============ WORKSPACES ============
+async function loadWorkspaces() {
+  try {
+    const res = await api('/api/collections/workspaces/records?sort=-created');
+    state.workspaces = res.items || [];
+    renderWorkspaceList();
+    if (state.workspaces.length && !state.activeWorkspace) {
+      selectWorkspace(state.workspaces[0]);
+    }
+  } catch (err) {
+    toast('Failed to load workspaces: ' + err.message);
+  }
+}
+
+function renderWorkspaceList() {
+  const list = document.getElementById('workspace-list');
+  list.innerHTML = '';
+  state.workspaces.forEach(ws => {
+    const btn = document.createElement('button');
+    btn.className = 'workspace-item' + (state.activeWorkspace?.id === ws.id ? ' active' : '');
+    btn.textContent = ws.wname;
+    btn.addEventListener('click', () => selectWorkspace(ws));
+    list.appendChild(btn);
+  });
+}
+
+document.getElementById('create-workspace-btn').addEventListener('click', async () => {
+  const input = document.getElementById('new-workspace-name');
+  const wname = input.value.trim();
+  if (!wname) return;
+  try {
+    const ws = await api('/api/collections/workspaces/records', {
+      method: 'POST',
+      body: JSON.stringify({ wname, owner: state.user.id })
+    });
+    input.value = '';
+    await loadWorkspaces();
+    selectWorkspace(ws);
+    toast('Workspace created');
+  } catch (err) {
+    toast('Failed: ' + err.message);
+  }
+});
+
+async function selectWorkspace(ws) {
+  state.activeWorkspace = ws;
+  state.activeDocument = null;
+  renderWorkspaceList();
+  await loadDocuments();
+  renderDocumentList();
+}
+
+// ============ DOCUMENTS ============
+async function loadDocuments() {
+  try {
+    const filter = encodeURIComponent(`workspace="${state.activeWorkspace.id}"`);
+    const res = await api(`/api/collections/documents/records?filter=${filter}&sort=-created`);
+    state.documents = res.items || [];
+  } catch (err) {
+    toast('Failed to load documents: ' + err.message);
+    state.documents = [];
+  }
+}
+
+function renderDocumentList() {
+  const main = document.getElementById('main-content');
+  const docCards = state.documents.map(doc => `
+    <div class="doc-card" data-id="${doc.id}">
+      <div class="doc-title">${escapeHtml(doc.title)}</div>
+      <p class="doc-preview">${escapeHtml((doc.content || '').slice(0, 140))}${(doc.content||'').length > 140 ? '…' : ''}</p>
+      <div class="doc-meta">${new Date(doc.created).toLocaleDateString()} · ${doc.id}</div>
+    </div>
+  `).join('') || '<div class="empty-state">No documents yet in this workspace. Create the first one below.</div>';
+
+  main.innerHTML = `
+    <div class="main-header">
+      <div>
+        <h2 class="main-title">${escapeHtml(state.activeWorkspace.wname)}</h2>
+        <div class="main-meta">WORKSPACE · ${state.activeWorkspace.id}</div>
+      </div>
+    </div>
+
+    <div class="new-item-form">
+      <input type="text" id="new-doc-title" placeholder="Document title">
+      <textarea id="new-doc-content" placeholder="Write something..."></textarea>
+      <div class="form-row">
+        <button class="btn" id="create-doc-btn" style="width:auto;">+ Add document</button>
+      </div>
+    </div>
+
+    <div id="doc-list">${docCards}</div>
+  `;
+
+  document.getElementById('create-doc-btn').addEventListener('click', createDocument);
+  document.querySelectorAll('.doc-card').forEach(card => {
+    card.addEventListener('click', () => openDocument(card.dataset.id));
+  });
+}
+
+async function createDocument() {
+  const title = document.getElementById('new-doc-title').value.trim();
+  const content = document.getElementById('new-doc-content').value.trim();
+  if (!title) return;
+  try {
+    await api('/api/collections/documents/records', {
+      method: 'POST',
+      body: JSON.stringify({
+        title, content,
+        workspace: state.activeWorkspace.id,
+        author: state.user.id
+      })
+    });
+    // application-layer activity log (Solarch's pb_hooks don't fire on create — see backend README)
+    await api('/api/collections/activity_log/records', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'document_created', details: title,
+        user: state.user.id, workspace: state.activeWorkspace.id
+      })
+    }).catch(() => {});
+    await loadDocuments();
+    renderDocumentList();
+    toast('Document created');
+  } catch (err) {
+    toast('Failed: ' + err.message);
+  }
+}
+
+async function openDocument(id) {
+  const doc = state.documents.find(d => d.id === id);
+  if (!doc) return;
+  state.activeDocument = doc;
+  await loadComments(id);
+  renderDocumentDetail();
+}
+
+async function loadComments(documentId) {
+  try {
+    const filter = encodeURIComponent(`document="${documentId}"`);
+    const res = await api(`/api/collections/comments/records?filter=${filter}&sort=created`);
+    state.comments = res.items || [];
+  } catch (err) {
+    state.comments = [];
+  }
+}
+
+function renderDocumentDetail() {
+  const doc = state.activeDocument;
+  const main = document.getElementById('main-content');
+  const commentsHtml = state.comments.map(c => `
+    <div class="comment">
+      ${escapeHtml(c.text)}
+      <div class="comment-meta">${new Date(c.created).toLocaleString()}</div>
+    </div>
+  `).join('') || '<div style="color:var(--muted); font-size:13px;">No comments yet.</div>';
+
+  main.innerHTML = `
+    <button class="back-link" id="back-to-list">← Back to ${escapeHtml(state.activeWorkspace.wname)}</button>
+    <div class="doc-detail">
+      <h1 class="doc-detail-title">${escapeHtml(doc.title)}</h1>
+      <div class="doc-detail-meta">CREATED ${new Date(doc.created).toLocaleString()} · ${doc.id}</div>
+      <div class="doc-detail-content">${escapeHtml(doc.content || '(no content)')}</div>
+
+      <div class="comments-label">Comments (${state.comments.length})</div>
+      <div id="comments-list">${commentsHtml}</div>
+
+      <div class="new-item-form" style="margin-top:16px;">
+        <textarea id="new-comment-text" placeholder="Add a comment..." style="min-height:50px;"></textarea>
+        <div class="form-row">
+          <button class="btn" id="add-comment-btn" style="width:auto;">Post comment</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('back-to-list').addEventListener('click', () => {
+    state.activeDocument = null;
+    renderDocumentList();
+  });
+  document.getElementById('add-comment-btn').addEventListener('click', addComment);
+}
+
+async function addComment() {
+  const text = document.getElementById('new-comment-text').value.trim();
+  if (!text) return;
+  try {
+    await api('/api/collections/comments/records', {
+      method: 'POST',
+      body: JSON.stringify({ text, document: state.activeDocument.id, author: state.user.id })
+    });
+    await api('/api/collections/activity_log/records', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'comment_added', details: text,
+        user: state.user.id, workspace: state.activeWorkspace.id
+      })
+    }).catch(() => {});
+    await loadComments(state.activeDocument.id);
+    renderDocumentDetail();
+    toast('Comment posted');
+  } catch (err) {
+    toast('Failed: ' + err.message);
+  }
+}
+
+// ============ UTIL ============
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+// ============ INIT ============
+if (state.token && state.user) {
+  enterApp();
+}
+</script>
+</body>
+</html>
