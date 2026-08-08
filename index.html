@@ -9,381 +9,75 @@
 <script src="config.js"></script>
 <style>
   :root {
-    --ink: #1B263B;
-    --ink-soft: #445069;
-    --muted: #7C8CA5;
-    --paper: #F2F4F1;
-    --paper-raised: #FFFFFF;
-    --line: #DCE1DC;
-    --steel: #3D5A80;
-    --steel-dark: #2C4360;
-    --gold: #B8860B;
-    --gold-soft: #FBF3DF;
-    --danger: #A8423F;
-    --radius: 3px;
-    --mono: 'JetBrains Mono', monospace;
-    --serif: 'Source Serif 4', Georgia, serif;
-    --sans: 'Inter', sans-serif;
+    --ink: #1B263B; --ink-soft: #445069; --muted: #7C8CA5; --paper: #F2F4F1;
+    --paper-raised: #FFFFFF; --line: #DCE1DC; --steel: #3D5A80; --steel-dark: #2C4360;
+    --gold: #B8860B; --gold-soft: #FBF3DF; --danger: #A8423F; --radius: 3px;
+    --mono: 'JetBrains Mono', monospace; --serif: 'Source Serif 4', Georgia, serif; --sans: 'Inter', sans-serif;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: var(--sans);
-    background: var(--paper);
-    color: var(--ink);
-    -webkit-font-smoothing: antialiased;
-  }
+  body { margin: 0; font-family: var(--sans); background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
   a { color: inherit; }
-
-  /* ---------- Auth screen ---------- */
-  #auth-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .auth-card {
-    width: 100%;
-    max-width: 380px;
-    background: var(--paper-raised);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 40px 36px;
-  }
-  .auth-mark {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 6px;
-  }
-  .auth-title {
-    font-family: var(--serif);
-    font-size: 28px;
-    font-weight: 600;
-    margin: 0 0 28px 0;
-    line-height: 1.2;
-  }
+  #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .auth-card { width: 100%; max-width: 380px; background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 40px 36px; }
+  .auth-mark { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  .auth-title { font-family: var(--serif); font-size: 28px; font-weight: 600; margin: 0 0 28px 0; line-height: 1.2; }
   .field { margin-bottom: 16px; }
-  .field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--ink-soft);
-    margin-bottom: 6px;
-    letter-spacing: 0.01em;
-  }
-  .field input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    font-family: var(--sans);
-    font-size: 14px;
-    background: var(--paper);
-    color: var(--ink);
-  }
-  .field input:focus {
-    outline: none;
-    border-color: var(--steel);
-    background: var(--paper-raised);
-  }
-  .btn {
-    width: 100%;
-    padding: 11px;
-    background: var(--steel);
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background 0.15s ease, opacity 0.15s ease;
-  }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; letter-spacing: 0.01em; }
+  .field input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); font-family: var(--sans); font-size: 14px; background: var(--paper); color: var(--ink); }
+  .field input:focus { outline: none; border-color: var(--steel); background: var(--paper-raised); }
+  .btn { width: 100%; padding: 11px; background: var(--steel); color: white; border: none; border-radius: var(--radius); font-family: var(--sans); font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.15s ease, opacity 0.15s ease; }
   .btn:hover:not(:disabled) { background: var(--steel-dark); }
   .btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-  .btn-ghost {
-    background: transparent;
-    color: var(--steel);
-    border: 1px solid var(--line);
-  }
+  .btn-ghost { background: transparent; color: var(--steel); border: 1px solid var(--line); }
   .btn-ghost:hover:not(:disabled) { background: var(--paper); }
-  .auth-toggle {
-    margin-top: 18px;
-    text-align: center;
-    font-size: 13px;
-    color: var(--muted);
-  }
-  .auth-toggle button {
-    background: none;
-    border: none;
-    color: var(--steel);
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 13px;
-    font-family: var(--sans);
-    text-decoration: underline;
-    padding: 0;
-  }
-  .auth-error {
-    background: #FBEAEA;
-    border: 1px solid var(--danger);
-    color: var(--danger);
-    padding: 10px 12px;
-    border-radius: var(--radius);
-    font-size: 13px;
-    margin-bottom: 16px;
-  }
-
-  /* ---------- App shell ---------- */
+  .auth-toggle { margin-top: 18px; text-align: center; font-size: 13px; color: var(--muted); }
+  .auth-toggle button { background: none; border: none; color: var(--steel); font-weight: 600; cursor: pointer; font-size: 13px; font-family: var(--sans); text-decoration: underline; padding: 0; }
+  .auth-error { background: #FBEAEA; border: 1px solid var(--danger); color: var(--danger); padding: 10px 12px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px; }
   #app-screen { display: none; min-height: 100vh; }
   .shell { display: flex; min-height: 100vh; }
-  .sidebar {
-    width: 260px;
-    flex-shrink: 0;
-    background: var(--ink);
-    color: #C7D0E0;
-    padding: 24px 20px;
-    display: flex;
-    flex-direction: column;
-  }
-  .brand {
-    font-family: var(--serif);
-    font-size: 20px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 4px;
-  }
-  .brand-tag {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 28px;
-  }
-  .nav-section-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #6B7A97;
-    margin: 18px 0 8px 0;
-  }
-  .workspace-item {
-    display: block;
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    color: #C7D0E0;
-    padding: 8px 10px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    cursor: pointer;
-    font-family: var(--sans);
-    margin-bottom: 2px;
-  }
+  .sidebar { width: 260px; flex-shrink: 0; background: var(--ink); color: #C7D0E0; padding: 24px 20px; display: flex; flex-direction: column; }
+  .brand { font-family: var(--serif); font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .brand-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; }
+  .nav-section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B7A97; margin: 18px 0 8px 0; }
+  .workspace-item { display: block; width: 100%; text-align: left; background: none; border: none; color: #C7D0E0; padding: 8px 10px; border-radius: var(--radius); font-size: 14px; cursor: pointer; font-family: var(--sans); margin-bottom: 2px; }
   .workspace-item:hover { background: rgba(255,255,255,0.06); }
   .workspace-item.active { background: var(--steel); color: white; }
-  .sidebar-footer {
-    margin-top: auto;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    font-size: 13px;
-  }
+  .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; }
   .sidebar-user { color: #fff; font-weight: 600; margin-bottom: 8px; }
-  .sidebar-footer button {
-    background: none;
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #C7D0E0;
-    padding: 6px 10px;
-    border-radius: var(--radius);
-    font-size: 12px;
-    cursor: pointer;
-    font-family: var(--sans);
-  }
+  .sidebar-footer button { background: none; border: 1px solid rgba(255,255,255,0.2); color: #C7D0E0; padding: 6px 10px; border-radius: var(--radius); font-size: 12px; cursor: pointer; font-family: var(--sans); }
   .sidebar-footer button:hover { border-color: var(--gold); color: var(--gold); }
-
-  .main {
-    flex: 1;
-    padding: 40px 48px;
-    max-width: 900px;
-  }
-  .main-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
-  }
-  .main-title {
-    font-family: var(--serif);
-    font-size: 30px;
-    font-weight: 600;
-    margin: 0;
-  }
-  .main-meta {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    margin: 4px 0 32px 0;
-  }
-  .empty-state {
-    border: 1px dashed var(--line);
-    border-radius: var(--radius);
-    padding: 40px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 14px;
-  }
-
-  .new-item-form {
-    background: var(--paper-raised);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 18px;
-    margin-bottom: 24px;
-  }
-  .new-item-form input[type="text"], .new-item-form textarea {
-    width: 100%;
-    padding: 9px 11px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    font-family: var(--sans);
-    font-size: 14px;
-    margin-bottom: 10px;
-    background: var(--paper);
-  }
+  .main { flex: 1; padding: 40px 48px; max-width: 900px; }
+  .main-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .main-title { font-family: var(--serif); font-size: 30px; font-weight: 600; margin: 0; }
+  .main-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin: 4px 0 32px 0; }
+  .empty-state { border: 1px dashed var(--line); border-radius: var(--radius); padding: 40px; text-align: center; color: var(--muted); font-size: 14px; }
+  .new-item-form { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 24px; }
+  .new-item-form input[type="text"], .new-item-form textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius); font-family: var(--sans); font-size: 14px; margin-bottom: 10px; background: var(--paper); }
   .new-item-form textarea { min-height: 70px; resize: vertical; font-family: var(--serif); }
   .form-row { display: flex; gap: 10px; }
   .form-row .btn { width: auto; padding: 9px 18px; }
-
-  .doc-card {
-    background: var(--paper-raised);
-    border: 1px solid var(--line);
-    border-left: 3px solid var(--steel);
-    border-radius: var(--radius);
-    padding: 20px 22px;
-    margin-bottom: 14px;
-    cursor: pointer;
-    transition: border-color 0.12s ease;
-  }
+  .doc-card { background: var(--paper-raised); border: 1px solid var(--line); border-left: 3px solid var(--steel); border-radius: var(--radius); padding: 20px 22px; margin-bottom: 14px; cursor: pointer; transition: border-color 0.12s ease; }
   .doc-card:hover { border-left-color: var(--gold); }
-  .doc-title {
-    font-family: var(--serif);
-    font-size: 19px;
-    font-weight: 600;
-    margin: 0 0 6px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .doc-preview {
-    font-family: var(--serif);
-    font-size: 14px;
-    color: var(--ink-soft);
-    line-height: 1.5;
-    margin: 0 0 10px 0;
-  }
-  .doc-meta {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .doc-detail {
-    background: var(--paper-raised);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 32px;
-  }
-  .back-link {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--steel);
-    text-decoration: none;
-    margin-bottom: 20px;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-  }
-  .doc-detail-title {
-    font-family: var(--serif);
-    font-size: 28px;
-    font-weight: 700;
-    margin: 0 0 6px 0;
-  }
-  .doc-detail-meta {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--line);
-  }
-  .doc-detail-content {
-    font-family: var(--serif);
-    font-size: 16px;
-    line-height: 1.7;
-    color: var(--ink);
-    white-space: pre-wrap;
-    margin-bottom: 32px;
-  }
-  .comments-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-  }
-  .comment {
-    padding: 12px 0;
-    border-bottom: 1px solid var(--line);
-    font-size: 14px;
-  }
+  .doc-title { font-family: var(--serif); font-size: 19px; font-weight: 600; margin: 0 0 6px 0; display: flex; justify-content: space-between; align-items: center; }
+  .doc-preview { font-family: var(--serif); font-size: 14px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 10px 0; }
+  .doc-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .doc-detail { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px; }
+  .back-link { display: inline-block; font-family: var(--mono); font-size: 12px; color: var(--steel); text-decoration: none; margin-bottom: 20px; cursor: pointer; background: none; border: none; padding: 0; }
+  .doc-detail-title { font-family: var(--serif); font-size: 28px; font-weight: 700; margin: 0 0 6px 0; }
+  .doc-detail-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+  .doc-detail-content { font-family: var(--serif); font-size: 16px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; margin-bottom: 32px; }
+  .comments-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .comment { padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
   .comment:last-child { border-bottom: none; }
-  .comment-meta {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--ink);
-    color: white;
-    padding: 12px 18px;
-    border-radius: var(--radius);
-    font-size: 13px;
-    font-family: var(--sans);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.2s ease;
-    pointer-events: none;
-  }
+  .comment-meta { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: white; padding: 12px 18px; border-radius: var(--radius); font-size: 13px; font-family: var(--sans); box-shadow: 0 4px 16px rgba(0,0,0,0.2); opacity: 0; transform: translateY(8px); transition: all 0.2s ease; pointer-events: none; }
   .toast.show { opacity: 1; transform: translateY(0); }
-
-  @media (max-width: 720px) {
-    .shell { flex-direction: column; }
-    .sidebar { width: 100%; }
-    .main { padding: 24px; }
-  }
+  @media (max-width: 720px) { .shell { flex-direction: column; } .sidebar { width: 100%; } .main { padding: 24px; } }
 </style>
 </head>
 <body>
 
-<!-- AUTH SCREEN -->
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-mark">NexusDocs</div>
@@ -412,7 +106,6 @@
   </div>
 </div>
 
-<!-- APP SCREEN -->
 <div id="app-screen">
   <div class="shell">
     <div class="sidebar">
@@ -444,30 +137,19 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============ CONFIG ============
 const API_BASE = window.__NEXUSDOCS_API_BASE__ || "http://localhost:8090";
 
-// ============ STATE ============
 let state = {
   token: localStorage.getItem('nd_token') || null,
   user: JSON.parse(localStorage.getItem('nd_user') || 'null'),
-  workspaces: [],
-  activeWorkspace: null,
-  documents: [],
-  activeDocument: null,
-  comments: [],
-  mode: 'login',
-  isEditing: false
+  workspaces: [], activeWorkspace: null, documents: [], activeDocument: null,
+  comments: [], mode: 'login', isEditing: false
 };
 
-// ============ API HELPERS ============
 async function api(path, opts = {}) {
   const isFormData = opts.body instanceof FormData;
   const headers = { ...(opts.headers || {}) };
-  
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
-  }
+  if (!isFormData) headers['Content-Type'] = 'application/json';
   if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
 
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
@@ -486,19 +168,12 @@ async function api(path, opts = {}) {
 function friendlyFieldError(d) {
   const field = d.field || '';
   const msg = d.message || '';
-  if (field === 'email' && /unique/i.test(msg)) {
-    return 'This email is already registered. Try signing in instead.';
-  }
-  if (field === 'password' && /8 characters/i.test(msg)) {
-    return 'Password must be at least 8 characters.';
-  }
-  if (/unique/i.test(msg)) {
-    return `${field ? field + ': ' : ''}This value is already taken.`;
-  }
+  if (field === 'email' && /unique/i.test(msg)) return 'This email is already registered. Try signing in instead.';
+  if (field === 'password' && /8 characters/i.test(msg)) return 'Password must be at least 8 characters.';
+  if (/unique/i.test(msg)) return `${field ? field + ': ' : ''}This value is already taken.`;
   return `${field ? field + ': ' : ''}${msg}`;
 }
 
-// ============ TOAST ============
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -506,7 +181,6 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-// ============ AUTH ============
 const authForm = document.getElementById('auth-form');
 const authTitle = document.getElementById('auth-title');
 const authSubmit = document.getElementById('auth-submit');
@@ -586,7 +260,6 @@ document.getElementById('logout-btn').addEventListener('click', () => {
   document.getElementById('auth-screen').style.display = 'flex';
 });
 
-// ============ APP ENTRY ============
 async function enterApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
@@ -594,15 +267,12 @@ async function enterApp() {
   await loadWorkspaces();
 }
 
-// ============ WORKSPACES ============
 async function loadWorkspaces() {
   try {
     const res = await api('/api/collections/workspaces/records?sort=-created');
     state.workspaces = res.items || [];
     renderWorkspaceList();
-    if (state.workspaces.length && !state.activeWorkspace) {
-      selectWorkspace(state.workspaces[0]);
-    }
+    if (state.workspaces.length && !state.activeWorkspace) selectWorkspace(state.workspaces[0]);
   } catch (err) {
     toast('Failed to load workspaces: ' + err.message);
   }
@@ -625,7 +295,6 @@ document.getElementById('create-workspace-btn').addEventListener('click', async 
   const input = document.getElementById('new-workspace-name');
   const wname = input.value.trim();
   if (!wname) return;
-
   btn.disabled = true;
   btn.textContent = 'Creating...';
   try {
@@ -654,7 +323,6 @@ async function selectWorkspace(ws) {
   renderDocumentList();
 }
 
-// ============ DOCUMENTS ============
 async function loadDocuments() {
   try {
     const filter = encodeURIComponent(`workspace='${state.activeWorkspace.id}'`);
@@ -670,7 +338,7 @@ function renderDocumentList() {
   const main = document.getElementById('main-content');
   const docCards = state.documents.map(doc => {
     const authorName = doc.expand?.author?.name || doc.expand?.author?.email || doc.author || 'Unknown';
-    const hasFile = !!(doc.file || doc.attachment);
+    const hasFile = !!doc.attachment;
     return `
       <div class="doc-card" data-id="${doc.id}">
         <div class="doc-title">
@@ -695,12 +363,10 @@ function renderDocumentList() {
       <div style="font-family:var(--mono); font-size:11px; color:var(--steel); margin-bottom:10px; font-weight:bold; text-transform:uppercase;">Create New Document</div>
       <input type="text" id="new-doc-title" placeholder="Document title">
       <textarea id="new-doc-content" placeholder="Write something..."></textarea>
-      
       <div class="field" style="margin-bottom:16px; background:var(--paper-raised); padding:10px; border:1px dashed var(--line); border-radius:var(--radius);">
         <label style="display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:6px;">📎 Upload Attachment (Optional)</label>
         <input type="file" id="new-doc-file" style="background:var(--paper); padding:6px; font-size:13px; width:100%; border:1px solid var(--line); border-radius:var(--radius); cursor:pointer;">
       </div>
-      
       <div class="form-row">
         <button class="btn" id="create-doc-btn" style="width:auto;">+ Add document</button>
       </div>
@@ -721,7 +387,6 @@ async function createDocument() {
   const content = document.getElementById('new-doc-content').value.trim();
   const fileInput = document.getElementById('new-doc-file');
   const file = fileInput?.files[0];
-
   if (!title) return;
 
   btn.disabled = true;
@@ -735,7 +400,10 @@ async function createDocument() {
       formData.append('content', content);
       formData.append('workspace', state.activeWorkspace.id);
       formData.append('author', state.user.id);
-      formData.append('file', file);
+      // NOTE: field name must match the collection's actual field name ('attachment'),
+      // not an arbitrary name like 'file' — mismatches here cause Solarch's multipart
+      // parser to silently drop other fields too, surfacing as unrelated "title required" errors.
+      formData.append('attachment', file);
       body = formData;
     } else {
       body = JSON.stringify({
@@ -745,10 +413,7 @@ async function createDocument() {
       });
     }
 
-    await api('/api/collections/documents/records', {
-      method: 'POST',
-      body
-    });
+    await api('/api/collections/documents/records', { method: 'POST', body });
 
     await api('/api/collections/activity_log/records', {
       method: 'POST',
@@ -791,7 +456,7 @@ async function loadComments(documentId) {
 function renderDocumentDetail() {
   const doc = state.activeDocument;
   const main = document.getElementById('main-content');
-  
+
   if (state.isEditing) {
     main.innerHTML = `
       <button class="back-link" id="cancel-edit-btn">← Cancel Editing</button>
@@ -799,13 +464,11 @@ function renderDocumentDetail() {
         <div style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase;">Editing Document</div>
         <input type="text" id="edit-doc-title" value="${escapeHtml(doc.title)}" style="width:100%; padding:10px; font-size:20px; font-family:var(--serif); font-weight:bold; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:12px;">
         <textarea id="edit-doc-content" style="width:100%; min-height:250px; padding:12px; font-size:15px; font-family:var(--serif); border:1px solid var(--line); border-radius:var(--radius); resize:vertical;">${escapeHtml(doc.content || '')}</textarea>
-        
         <div style="margin-top:16px; display:flex; gap:12px;">
           <button class="btn" id="save-doc-btn" style="width:auto; background:var(--steel);">Save Changes</button>
         </div>
       </div>
     `;
-    
     document.getElementById('cancel-edit-btn').addEventListener('click', () => {
       state.isEditing = false;
       renderDocumentDetail();
@@ -815,7 +478,7 @@ function renderDocumentDetail() {
   }
 
   const docAuthor = doc.expand?.author?.name || doc.expand?.author?.email || doc.author || 'Unknown';
-  const fileName = doc.file || doc.attachment;
+  const fileName = doc.attachment;
   const fileUrl = fileName ? `${API_BASE}/api/files/documents/${doc.id}/${fileName}` : null;
 
   const commentsHtml = state.comments.map(c => {
@@ -881,10 +544,8 @@ async function addComment() {
   const btn = document.getElementById('add-comment-btn');
   const text = document.getElementById('new-comment-text').value.trim();
   if (!text) return;
-
   btn.disabled = true;
   btn.textContent = 'Posting...';
-
   try {
     await api('/api/collections/comments/records', {
       method: 'POST',
@@ -903,7 +564,7 @@ async function addComment() {
   } catch (err) {
     toast('Failed: ' + err.message);
   } finally {
-    if(btn) {
+    if (btn) {
       btn.disabled = false;
       btn.textContent = 'Post comment';
     }
@@ -914,22 +575,17 @@ async function saveDocument() {
   const btn = document.getElementById('save-doc-btn');
   const title = document.getElementById('edit-doc-title').value.trim();
   const content = document.getElementById('edit-doc-content').value.trim();
-
   if (!title) return;
-
   btn.disabled = true;
   btn.textContent = 'Saving...';
-
   try {
     await api(`/api/collections/documents/records/${state.activeDocument.id}`, {
       method: 'PATCH',
       body: JSON.stringify({ title, content })
     });
-    
     state.activeDocument.title = title;
     state.activeDocument.content = content;
     state.isEditing = false;
-    
     renderDocumentDetail();
     toast('Document updated successfully');
   } catch (err) {
@@ -941,20 +597,14 @@ async function saveDocument() {
 
 async function deleteDocument() {
   if (!confirm(`Are you sure you want to delete "${state.activeDocument.title}"?`)) return;
-
   const btn = document.getElementById('delete-doc-btn');
   btn.disabled = true;
   btn.textContent = 'Deleting...';
-
   try {
-    await api(`/api/collections/documents/records/${state.activeDocument.id}`, {
-      method: 'DELETE'
-    });
-    
+    await api(`/api/collections/documents/records/${state.activeDocument.id}`, { method: 'DELETE' });
     toast('Document deleted');
     state.activeDocument = null;
     state.isEditing = false;
-    
     await loadDocuments();
     renderDocumentList();
   } catch (err) {
@@ -964,17 +614,13 @@ async function deleteDocument() {
   }
 }
 
-// ============ UTIL ============
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str || '';
   return div.innerHTML;
 }
 
-// ============ INIT ============
-if (state.token && state.user) {
-  enterApp();
-}
+if (state.token && state.user) enterApp();
 </script>
 </body>
 </html>
