@@ -1,626 +1,1281 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NexusDocs — Team Knowledge Base</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="config.js"></script>
-<style>
-  :root {
-    --ink: #1B263B; --ink-soft: #445069; --muted: #7C8CA5; --paper: #F2F4F1;
-    --paper-raised: #FFFFFF; --line: #DCE1DC; --steel: #3D5A80; --steel-dark: #2C4360;
-    --gold: #B8860B; --gold-soft: #FBF3DF; --danger: #A8423F; --radius: 3px;
-    --mono: 'JetBrains Mono', monospace; --serif: 'Source Serif 4', Georgia, serif; --sans: 'Inter', sans-serif;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: var(--sans); background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
-  a { color: inherit; }
-  #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .auth-card { width: 100%; max-width: 380px; background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 40px 36px; }
-  .auth-mark { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
-  .auth-title { font-family: var(--serif); font-size: 28px; font-weight: 600; margin: 0 0 28px 0; line-height: 1.2; }
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; letter-spacing: 0.01em; }
-  .field input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); font-family: var(--sans); font-size: 14px; background: var(--paper); color: var(--ink); }
-  .field input:focus { outline: none; border-color: var(--steel); background: var(--paper-raised); }
-  .btn { width: 100%; padding: 11px; background: var(--steel); color: white; border: none; border-radius: var(--radius); font-family: var(--sans); font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.15s ease, opacity 0.15s ease; }
-  .btn:hover:not(:disabled) { background: var(--steel-dark); }
-  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-  .btn-ghost { background: transparent; color: var(--steel); border: 1px solid var(--line); }
-  .btn-ghost:hover:not(:disabled) { background: var(--paper); }
-  .auth-toggle { margin-top: 18px; text-align: center; font-size: 13px; color: var(--muted); }
-  .auth-toggle button { background: none; border: none; color: var(--steel); font-weight: 600; cursor: pointer; font-size: 13px; font-family: var(--sans); text-decoration: underline; padding: 0; }
-  .auth-error { background: #FBEAEA; border: 1px solid var(--danger); color: var(--danger); padding: 10px 12px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px; }
-  #app-screen { display: none; min-height: 100vh; }
-  .shell { display: flex; min-height: 100vh; }
-  .sidebar { width: 260px; flex-shrink: 0; background: var(--ink); color: #C7D0E0; padding: 24px 20px; display: flex; flex-direction: column; }
-  .brand { font-family: var(--serif); font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-  .brand-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; }
-  .nav-section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B7A97; margin: 18px 0 8px 0; }
-  .workspace-item { display: block; width: 100%; text-align: left; background: none; border: none; color: #C7D0E0; padding: 8px 10px; border-radius: var(--radius); font-size: 14px; cursor: pointer; font-family: var(--sans); margin-bottom: 2px; }
-  .workspace-item:hover { background: rgba(255,255,255,0.06); }
-  .workspace-item.active { background: var(--steel); color: white; }
-  .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; }
-  .sidebar-user { color: #fff; font-weight: 600; margin-bottom: 8px; }
-  .sidebar-footer button { background: none; border: 1px solid rgba(255,255,255,0.2); color: #C7D0E0; padding: 6px 10px; border-radius: var(--radius); font-size: 12px; cursor: pointer; font-family: var(--sans); }
-  .sidebar-footer button:hover { border-color: var(--gold); color: var(--gold); }
-  .main { flex: 1; padding: 40px 48px; max-width: 900px; }
-  .main-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-  .main-title { font-family: var(--serif); font-size: 30px; font-weight: 600; margin: 0; }
-  .main-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin: 4px 0 32px 0; }
-  .empty-state { border: 1px dashed var(--line); border-radius: var(--radius); padding: 40px; text-align: center; color: var(--muted); font-size: 14px; }
-  .new-item-form { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 24px; }
-  .new-item-form input[type="text"], .new-item-form textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius); font-family: var(--sans); font-size: 14px; margin-bottom: 10px; background: var(--paper); }
-  .new-item-form textarea { min-height: 70px; resize: vertical; font-family: var(--serif); }
-  .form-row { display: flex; gap: 10px; }
-  .form-row .btn { width: auto; padding: 9px 18px; }
-  .doc-card { background: var(--paper-raised); border: 1px solid var(--line); border-left: 3px solid var(--steel); border-radius: var(--radius); padding: 20px 22px; margin-bottom: 14px; cursor: pointer; transition: border-color 0.12s ease; }
-  .doc-card:hover { border-left-color: var(--gold); }
-  .doc-title { font-family: var(--serif); font-size: 19px; font-weight: 600; margin: 0 0 6px 0; display: flex; justify-content: space-between; align-items: center; }
-  .doc-preview { font-family: var(--serif); font-size: 14px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 10px 0; }
-  .doc-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-  .doc-detail { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px; }
-  .back-link { display: inline-block; font-family: var(--mono); font-size: 12px; color: var(--steel); text-decoration: none; margin-bottom: 20px; cursor: pointer; background: none; border: none; padding: 0; }
-  .doc-detail-title { font-family: var(--serif); font-size: 28px; font-weight: 700; margin: 0 0 6px 0; }
-  .doc-detail-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
-  .doc-detail-content { font-family: var(--serif); font-size: 16px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; margin-bottom: 32px; }
-  .comments-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-  .comment { padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
-  .comment:last-child { border-bottom: none; }
-  .comment-meta { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 4px; }
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: white; padding: 12px 18px; border-radius: var(--radius); font-size: 13px; font-family: var(--sans); box-shadow: 0 4px 16px rgba(0,0,0,0.2); opacity: 0; transform: translateY(8px); transition: all 0.2s ease; pointer-events: none; }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  @media (max-width: 720px) { .shell { flex-direction: column; } .sidebar { width: 100%; } .main { padding: 24px; } }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusDocs — Advanced Knowledge Hub</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script src="config.js" onerror="console.log('config.js not found, using default URL')"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            // Classy, premium dark palette - NO NEON
+            dark: {
+              950: '#050505', 
+              900: '#0f1115', 
+              800: '#1a1d24', 
+              700: '#2a2f3a', 
+              600: '#3f4756', 
+            },
+            accent: {
+              400: '#94a3b8', // Slate
+              500: '#64748b',
+              600: '#475569',
+            }
+          },
+          boxShadow: {
+            'tactile': '0 1px 2px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
+            'float': '0 20px 40px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
+            'glow': '0 0 20px rgba(148, 163, 184, 0.15)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { background-color: #050505; color: #e5e5e5; margin: 0; overflow-x: hidden; }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2f3a; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f4756; }
+    
+    .glass-panel { 
+      background: rgba(15, 17, 21, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255,255,255,0.05);
+    }
+    
+    .tactile-button {
+      background: linear-gradient(180deg, #2a2f3a 0%, #1a1d24 100%);
+      border: 1px solid #3f4756;
+      box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tactile-button:hover:not(:disabled) {
+      background: linear-gradient(180deg, #3f4756 0%, #2a2f3a 100%);
+      border-color: #64748b;
+      transform: translateY(-1px);
+      box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.15), 0 4px 8px rgba(0,0,0,0.5);
+    }
+    .tactile-button:active:not(:disabled) {
+      transform: translateY(1px);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+    }
+
+    /* D3 Graph SVG styling */
+    .node circle { stroke: #2a2f3a; stroke-width: 1.5px; transition: stroke 0.3s, filter 0.3s; cursor: grab; }
+    .node circle:active { cursor: grabbing; }
+    .node:hover circle { stroke: #e5e5e5; filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.4)); }
+    .node text { font-family: 'Inter', sans-serif; font-size: 11px; fill: #94a3b8; pointer-events: none; }
+    .link { stroke: #2a2f3a; stroke-opacity: 0.8; }
+
+    /* Modern Markdown Styling */
+    .prose { max-width: 100%; color: #d4d4d8; }
+    .prose h1, .prose h2, .prose h3 { color: #f8fafc; font-weight: 600; letter-spacing: -0.02em; }
+    .prose h1 { font-size: 2.25rem; margin-bottom: 1.5rem; }
+    .prose h2 { font-size: 1.5rem; margin-top: 2rem; border-bottom: 1px solid #2a2f3a; padding-bottom: 0.5rem; }
+    .prose p { margin-bottom: 1.2rem; line-height: 1.7; color: #cbd5e1; }
+    .prose a { color: #f8fafc; text-decoration: underline; text-decoration-color: #64748b; text-underline-offset: 4px; transition: all 0.2s; }
+    .prose a:hover { text-decoration-color: #f8fafc; }
+    .prose code:not([class*="language-"]) { background: #1a1d24; border: 1px solid #2a2f3a; color: #e2e8f0; padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+    .prose blockquote { border-left: 2px solid #64748b; padding-left: 1.25rem; color: #94a3b8; font-style: italic; }
+    .prose pre { background: #050505 !important; border: 1px solid #2a2f3a; border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin: 1.5rem 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+    
+    /* Preserve Vanta Container Z-Index */
+    #vanta-bg { position: absolute; z-index: 0; top: 0; left: 0; width: 100%; height: 100%; }
+
+    .landing-noise { position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.14; background-image:radial-gradient(rgba(255,255,255,.18) .6px, transparent .6px); background-size:5px 5px; mask-image:linear-gradient(to bottom, black, transparent 85%); }
+    .demo-shell { box-shadow: 0 30px 80px rgba(0,0,0,.28); }
+    .demo-shell button:focus-visible, .demo-shell textarea:focus-visible { outline: 1px solid #94a3b8; outline-offset: 2px; }
+    .prose ul { padding-left:1.25rem; list-style:disc; }
+    .prose li { margin:.4rem 0; color:#94a3b8; }
+  </style>
 </head>
-<body>
+<body class="font-sans antialiased text-gray-300 selection:bg-accent-500 selection:text-white">
+  <div id="root"></div>
 
-<div id="auth-screen">
-  <div class="auth-card">
-    <div class="auth-mark">NexusDocs</div>
-    <h1 class="auth-title" id="auth-title">Sign in</h1>
-    <div id="auth-error" class="auth-error" style="display:none;"></div>
-    <form id="auth-form">
-      <div class="field" id="name-field" style="display:none;">
-        <label>Name</label>
-        <input type="text" id="name-input" autocomplete="name">
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="email-input" autocomplete="email" required>
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="password-input" autocomplete="current-password" required minlength="8">
-        <div id="password-hint" style="font-size:11px; color:var(--muted); margin-top:4px; display:none;">Must be at least 8 characters.</div>
-      </div>
-      <button type="submit" class="btn" id="auth-submit">Sign in</button>
-    </form>
-    <div class="auth-toggle">
-      <span id="auth-toggle-text">Don't have an account?</span>
-      <button id="auth-toggle-btn" type="button">Sign up</button>
-    </div>
-  </div>
-</div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-<div id="app-screen">
-  <div class="shell">
-    <div class="sidebar">
-      <div class="brand">NexusDocs</div>
-      <div class="brand-tag">Team Knowledge Base</div>
+    const API_BASE = window.__NEXUSDOCS_API_BASE__ || "http://localhost:8090";
 
-      <div class="nav-section-label">Workspaces</div>
-      <div id="workspace-list"></div>
+    const Icons = {
+      Logo: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
+      Activity: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+      Search: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+      Star: ({ filled }) => <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? "#fbbf24" : "none"} stroke={filled ? "#fbbf24" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+      Folder: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>,
+      Plus: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+      File: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>,
+      Grid: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+      Network: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
+      LogOut: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+      ChevronLeft: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+      Trash: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
+      Edit: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+      Close: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+    };
 
-      <div class="new-item-form" style="background:transparent; border:none; padding:12px 0 0 0;">
-        <input type="text" id="new-workspace-name" placeholder="New workspace name" style="background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.15); color:#fff;">
-        <button class="btn btn-ghost" id="create-workspace-btn" style="color:#C7D0E0; border-color:rgba(255,255,255,0.2);">+ Create workspace</button>
-      </div>
+    function App() {
+      const [token, setToken] = useState(() => localStorage.getItem('nd_token') || null);
+      const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('nd_user') || 'null'));
+      const [toastMsg, setToastMsg] = useState(null);
+      const [showAuthModal, setShowAuthModal] = useState(false);
+      const [authMode, setAuthMode] = useState('login');
 
-      <div class="sidebar-footer">
-        <div class="sidebar-user" id="sidebar-user-name"></div>
-        <button id="logout-btn">Sign out</button>
-      </div>
-    </div>
+      const showToast = (msg) => {
+        setToastMsg(msg);
+        setTimeout(() => setToastMsg(null), 3500);
+      };
 
-    <div class="main">
-      <div id="main-content">
-        <div class="empty-state">Select or create a workspace to get started.</div>
-      </div>
-    </div>
-  </div>
-</div>
+      const handleLogin = (newToken, newUser) => {
+        setToken(newToken);
+        setUser(newUser);
+        localStorage.setItem('nd_token', newToken);
+        localStorage.setItem('nd_user', JSON.stringify(newUser));
+        setShowAuthModal(false);
+        showToast(`Secure connection established.`);
+      };
 
-<div class="toast" id="toast"></div>
+      const handleLogout = () => {
+        setToken(null); setUser(null);
+        localStorage.removeItem('nd_token'); localStorage.removeItem('nd_user');
+      };
 
-<script>
-const API_BASE = window.__NEXUSDOCS_API_BASE__ || "http://localhost:8090";
+      const api = async (path, opts = {}) => {
+        const isFormData = opts.body instanceof FormData;
+        const headers = { ...(opts.headers || {}) };
+        if (!isFormData) headers['Content-Type'] = 'application/json';
+        if (token) headers['Authorization'] = `Bearer ${token}`;
 
-let state = {
-  token: localStorage.getItem('nd_token') || null,
-  user: JSON.parse(localStorage.getItem('nd_user') || 'null'),
-  workspaces: [], activeWorkspace: null, documents: [], activeDocument: null,
-  comments: [], mode: 'login', isEditing: false
-};
+        const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const details = data.data || data.errors;
+          if (Array.isArray(details) && details.length) {
+            const msg = details.map(d => `${d.field ? d.field + ': ' : ''}${d.message}`).join('; ');
+            throw new Error(msg);
+          }
+          throw new Error(data.message || `Request failed (${res.status})`);
+        }
+        return data;
+      };
 
-async function api(path, opts = {}) {
-  const isFormData = opts.body instanceof FormData;
-  const headers = { ...(opts.headers || {}) };
-  if (!isFormData) headers['Content-Type'] = 'application/json';
-  if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+      return (
+        <div className="min-h-screen w-full flex flex-col font-sans relative bg-dark-950 text-gray-300">
+          {!token ? (
+            <LandingPage onOpenAuth={(mode) => { setAuthMode(mode); setShowAuthModal(true); }} />
+          ) : (
+            <MainApp user={user} api={api} onLogout={handleLogout} showToast={showToast} />
+          )}
 
-  const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const details = data.data || data.errors;
-    if (Array.isArray(details) && details.length) {
-      const msg = details.map(d => friendlyFieldError(d)).join('; ');
-      throw new Error(msg);
-    }
-    throw new Error(data.message || `Request failed (${res.status})`);
-  }
-  return data;
-}
+          {showAuthModal && !token && (
+            <AuthModal initialMode={authMode} onClose={() => setShowAuthModal(false)} onLogin={handleLogin} api={api} />
+          )}
 
-function friendlyFieldError(d) {
-  const field = d.field || '';
-  const msg = d.message || '';
-  if (field === 'email' && /unique/i.test(msg)) return 'This email is already registered. Try signing in instead.';
-  if (field === 'password' && /8 characters/i.test(msg)) return 'Password must be at least 8 characters.';
-  if (/unique/i.test(msg)) return `${field ? field + ': ' : ''}This value is already taken.`;
-  return `${field ? field + ': ' : ''}${msg}`;
-}
-
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
-}
-
-const authForm = document.getElementById('auth-form');
-const authTitle = document.getElementById('auth-title');
-const authSubmit = document.getElementById('auth-submit');
-const authToggleText = document.getElementById('auth-toggle-text');
-const authToggleBtn = document.getElementById('auth-toggle-btn');
-const nameField = document.getElementById('name-field');
-const authError = document.getElementById('auth-error');
-
-authToggleBtn.addEventListener('click', () => {
-  state.mode = state.mode === 'login' ? 'signup' : 'login';
-  if (state.mode === 'signup') {
-    authTitle.textContent = 'Create account';
-    authSubmit.textContent = 'Sign up';
-    authToggleText.textContent = 'Already have an account?';
-    authToggleBtn.textContent = 'Sign in';
-    nameField.style.display = 'block';
-    document.getElementById('password-hint').style.display = 'block';
-  } else {
-    authTitle.textContent = 'Sign in';
-    authSubmit.textContent = 'Sign in';
-    authToggleText.textContent = "Don't have an account?";
-    authToggleBtn.textContent = 'Sign up';
-    nameField.style.display = 'none';
-    document.getElementById('password-hint').style.display = 'none';
-  }
-  authError.style.display = 'none';
-});
-
-authForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  authError.style.display = 'none';
-  authSubmit.disabled = true;
-  const originalText = authSubmit.textContent;
-  authSubmit.textContent = state.mode === 'signup' ? 'Signing up...' : 'Signing in...';
-
-  const email = document.getElementById('email-input').value.trim();
-  const password = document.getElementById('password-input').value;
-  const name = document.getElementById('name-input').value.trim();
-
-  try {
-    let result;
-    if (state.mode === 'signup') {
-      result = await api('/api/collections/users/records', {
-        method: 'POST',
-        body: JSON.stringify({ email, password, passwordConfirm: password, name })
-      });
-    } else {
-      result = await api('/api/collections/users/auth-with-password', {
-        method: 'POST',
-        body: JSON.stringify({ identity: email, password })
-      });
-    }
-    state.token = result.token;
-    state.user = result.record || { id: result.record?.id, name, email };
-    localStorage.setItem('nd_token', state.token);
-    localStorage.setItem('nd_user', JSON.stringify(state.user));
-    enterApp();
-  } catch (err) {
-    authError.textContent = err.message;
-    authError.style.display = 'block';
-    if (state.mode === 'signup' && /already registered/i.test(err.message)) {
-      authError.innerHTML = err.message.replace('Try signing in instead.', '<button type="button" id="switch-to-signin" style="background:none;border:none;color:inherit;text-decoration:underline;font-weight:600;cursor:pointer;padding:0;font-size:13px;font-family:inherit;">Sign in instead</button>');
-      document.getElementById('switch-to-signin').addEventListener('click', () => authToggleBtn.click());
-    }
-  } finally {
-    authSubmit.disabled = false;
-    authSubmit.textContent = originalText;
-  }
-});
-
-document.getElementById('logout-btn').addEventListener('click', () => {
-  state.token = null;
-  state.user = null;
-  localStorage.removeItem('nd_token');
-  localStorage.removeItem('nd_user');
-  document.getElementById('app-screen').style.display = 'none';
-  document.getElementById('auth-screen').style.display = 'flex';
-});
-
-async function enterApp() {
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app-screen').style.display = 'block';
-  document.getElementById('sidebar-user-name').textContent = state.user?.name || state.user?.email || 'You';
-  await loadWorkspaces();
-}
-
-async function loadWorkspaces() {
-  try {
-    const res = await api('/api/collections/workspaces/records?sort=-created');
-    state.workspaces = res.items || [];
-    renderWorkspaceList();
-    if (state.workspaces.length && !state.activeWorkspace) selectWorkspace(state.workspaces[0]);
-  } catch (err) {
-    toast('Failed to load workspaces: ' + err.message);
-  }
-}
-
-function renderWorkspaceList() {
-  const list = document.getElementById('workspace-list');
-  list.innerHTML = '';
-  state.workspaces.forEach(ws => {
-    const btn = document.createElement('button');
-    btn.className = 'workspace-item' + (state.activeWorkspace?.id === ws.id ? ' active' : '');
-    btn.textContent = ws.wname;
-    btn.addEventListener('click', () => selectWorkspace(ws));
-    list.appendChild(btn);
-  });
-}
-
-document.getElementById('create-workspace-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('create-workspace-btn');
-  const input = document.getElementById('new-workspace-name');
-  const wname = input.value.trim();
-  if (!wname) return;
-  btn.disabled = true;
-  btn.textContent = 'Creating...';
-  try {
-    const ws = await api('/api/collections/workspaces/records', {
-      method: 'POST',
-      body: JSON.stringify({ wname, owner: state.user.id })
-    });
-    input.value = '';
-    await loadWorkspaces();
-    selectWorkspace(ws);
-    toast('Workspace created');
-  } catch (err) {
-    toast('Failed: ' + err.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '+ Create workspace';
-  }
-});
-
-async function selectWorkspace(ws) {
-  state.activeWorkspace = ws;
-  state.activeDocument = null;
-  state.isEditing = false;
-  renderWorkspaceList();
-  await loadDocuments();
-  renderDocumentList();
-}
-
-async function loadDocuments() {
-  try {
-    const filter = encodeURIComponent(`workspace='${state.activeWorkspace.id}'`);
-    const res = await api(`/api/collections/documents/records?filter=${filter}&sort=-created&expand=author`);
-    state.documents = res.items || [];
-  } catch (err) {
-    toast('Failed to load documents: ' + err.message);
-    state.documents = [];
-  }
-}
-
-function renderDocumentList() {
-  const main = document.getElementById('main-content');
-  const docCards = state.documents.map(doc => {
-    const authorName = doc.expand?.author?.name || doc.expand?.author?.email || doc.author || 'Unknown';
-    const hasFile = !!doc.attachment;
-    return `
-      <div class="doc-card" data-id="${doc.id}">
-        <div class="doc-title">
-          <span>${escapeHtml(doc.title)}</span>
-          ${hasFile ? '<span style="font-size:12px; color:var(--gold); font-family:var(--mono);">📎 Attachment</span>' : ''}
-        </div>
-        <p class="doc-preview">${escapeHtml((doc.content || '').slice(0, 140))}${(doc.content||'').length > 140 ? '…' : ''}</p>
-        <div class="doc-meta">By ${escapeHtml(authorName)} · ${new Date(doc.created).toLocaleDateString()}</div>
-      </div>
-    `;
-  }).join('') || '<div class="empty-state">No documents yet in this workspace. Create the first one below.</div>';
-
-  main.innerHTML = `
-    <div class="main-header">
-      <div>
-        <h2 class="main-title">${escapeHtml(state.activeWorkspace.wname)}</h2>
-        <div class="main-meta">WORKSPACE · ${state.activeWorkspace.id}</div>
-      </div>
-    </div>
-
-    <div class="new-item-form" style="border: 2px solid var(--steel); background: #F8FAFC;">
-      <div style="font-family:var(--mono); font-size:11px; color:var(--steel); margin-bottom:10px; font-weight:bold; text-transform:uppercase;">Create New Document</div>
-      <input type="text" id="new-doc-title" placeholder="Document title">
-      <textarea id="new-doc-content" placeholder="Write something..."></textarea>
-      <div class="field" style="margin-bottom:16px; background:var(--paper-raised); padding:10px; border:1px dashed var(--line); border-radius:var(--radius);">
-        <label style="display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:6px;">📎 Upload Attachment (Optional)</label>
-        <input type="file" id="new-doc-file" style="background:var(--paper); padding:6px; font-size:13px; width:100%; border:1px solid var(--line); border-radius:var(--radius); cursor:pointer;">
-      </div>
-      <div class="form-row">
-        <button class="btn" id="create-doc-btn" style="width:auto;">+ Add document</button>
-      </div>
-    </div>
-
-    <div id="doc-list">${docCards}</div>
-  `;
-
-  document.getElementById('create-doc-btn').addEventListener('click', createDocument);
-  document.querySelectorAll('.doc-card').forEach(card => {
-    card.addEventListener('click', () => openDocument(card.dataset.id));
-  });
-}
-
-async function createDocument() {
-  const btn = document.getElementById('create-doc-btn');
-  const title = document.getElementById('new-doc-title').value.trim();
-  const content = document.getElementById('new-doc-content').value.trim();
-  const fileInput = document.getElementById('new-doc-file');
-  const file = fileInput?.files[0];
-  if (!title) return;
-
-  btn.disabled = true;
-  btn.textContent = file ? 'Uploading & Creating...' : 'Creating...';
-
-  try {
-    let body;
-    if (file) {
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('content', content);
-      formData.append('workspace', state.activeWorkspace.id);
-      formData.append('author', state.user.id);
-      // NOTE: field name must match the collection's actual field name ('attachment'),
-      // not an arbitrary name like 'file' — mismatches here cause Solarch's multipart
-      // parser to silently drop other fields too, surfacing as unrelated "title required" errors.
-      formData.append('attachment', file);
-      body = formData;
-    } else {
-      body = JSON.stringify({
-        title, content,
-        workspace: state.activeWorkspace.id,
-        author: state.user.id
-      });
-    }
-
-    await api('/api/collections/documents/records', { method: 'POST', body });
-
-    await api('/api/collections/activity_log/records', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'document_created', details: title,
-        user: state.user.id, workspace: state.activeWorkspace.id
-      })
-    }).catch(() => {});
-
-    await loadDocuments();
-    renderDocumentList();
-    toast('Document created');
-  } catch (err) {
-    toast('Failed: ' + err.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '+ Add document';
-  }
-}
-
-async function openDocument(id) {
-  const doc = state.documents.find(d => d.id === id);
-  if (!doc) return;
-  state.activeDocument = doc;
-  state.isEditing = false;
-  await loadComments(id);
-  renderDocumentDetail();
-}
-
-async function loadComments(documentId) {
-  try {
-    const filter = encodeURIComponent(`document='${documentId}'`);
-    const res = await api(`/api/collections/comments/records?filter=${filter}&sort=created&expand=author`);
-    state.comments = res.items || [];
-  } catch (err) {
-    state.comments = [];
-  }
-}
-
-function renderDocumentDetail() {
-  const doc = state.activeDocument;
-  const main = document.getElementById('main-content');
-
-  if (state.isEditing) {
-    main.innerHTML = `
-      <button class="back-link" id="cancel-edit-btn">← Cancel Editing</button>
-      <div class="doc-detail">
-        <div style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase;">Editing Document</div>
-        <input type="text" id="edit-doc-title" value="${escapeHtml(doc.title)}" style="width:100%; padding:10px; font-size:20px; font-family:var(--serif); font-weight:bold; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:12px;">
-        <textarea id="edit-doc-content" style="width:100%; min-height:250px; padding:12px; font-size:15px; font-family:var(--serif); border:1px solid var(--line); border-radius:var(--radius); resize:vertical;">${escapeHtml(doc.content || '')}</textarea>
-        <div style="margin-top:16px; display:flex; gap:12px;">
-          <button class="btn" id="save-doc-btn" style="width:auto; background:var(--steel);">Save Changes</button>
-        </div>
-      </div>
-    `;
-    document.getElementById('cancel-edit-btn').addEventListener('click', () => {
-      state.isEditing = false;
-      renderDocumentDetail();
-    });
-    document.getElementById('save-doc-btn').addEventListener('click', saveDocument);
-    return;
-  }
-
-  const docAuthor = doc.expand?.author?.name || doc.expand?.author?.email || doc.author || 'Unknown';
-  const fileName = doc.attachment;
-  const fileUrl = fileName ? `${API_BASE}/api/files/documents/${doc.id}/${fileName}` : null;
-
-  const commentsHtml = state.comments.map(c => {
-    const commentAuthor = c.expand?.author?.name || c.expand?.author?.email || c.author || 'Anonymous';
-    return `
-      <div class="comment">
-        ${escapeHtml(c.text)}
-        <div class="comment-meta">By ${escapeHtml(commentAuthor)} · ${new Date(c.created).toLocaleString()}</div>
-      </div>
-    `;
-  }).join('') || '<div style="color:var(--muted); font-size:13px;">No comments yet.</div>';
-
-  main.innerHTML = `
-    <button class="back-link" id="back-to-list">← Back to ${escapeHtml(state.activeWorkspace.wname)}</button>
-    <div class="doc-detail">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-        <h1 class="doc-detail-title" style="margin:0;">${escapeHtml(doc.title)}</h1>
-        <div style="display:flex; gap:8px;">
-          <button class="btn btn-ghost" id="edit-mode-btn" style="padding:6px 14px; font-size:12px; width:auto;">Edit</button>
-          <button class="btn" id="delete-doc-btn" style="padding:6px 14px; font-size:12px; width:auto; background:var(--danger);">Delete</button>
-        </div>
-      </div>
-      <div class="doc-detail-meta">BY ${escapeHtml(docAuthor)} · CREATED ${new Date(doc.created).toLocaleString()}</div>
-
-      ${fileUrl ? `
-        <div style="margin-bottom:24px; padding:12px 16px; background:var(--gold-soft); border:1px solid #E8D8A0; border-radius:var(--radius); display:flex; align-items:center; justify-content:space-between; gap:10px;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:16px;">📎</span>
-            <span style="font-size:13px; font-weight:600; color:var(--ink);">${escapeHtml(fileName)}</span>
+          <div className={`fixed bottom-8 right-8 z-[100] bg-dark-800 border border-dark-700 px-6 py-4 rounded-lg shadow-float font-mono text-xs transition-all duration-400 transform flex items-center gap-3 backdrop-blur-md bg-opacity-90 ${toastMsg ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>
+             <div className="w-2 h-2 rounded-full bg-accent-500 shadow-[0_0_8px_#64748b]"></div> {toastMsg}
           </div>
-          <a href="${fileUrl}" target="_blank" download class="btn" style="width:auto; padding:6px 14px; font-size:12px; text-decoration:none;">Download</a>
         </div>
-      ` : ''}
-
-      <div class="doc-detail-content">${escapeHtml(doc.content || '(no content)')}</div>
-
-      <div class="comments-label">Comments (${state.comments.length})</div>
-      <div id="comments-list">${commentsHtml}</div>
-
-      <div class="new-item-form" style="margin-top:16px;">
-        <textarea id="new-comment-text" placeholder="Add a comment..." style="min-height:50px;"></textarea>
-        <div class="form-row">
-          <button class="btn" id="add-comment-btn" style="width:auto;">Post comment</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('back-to-list').addEventListener('click', () => {
-    state.activeDocument = null;
-    state.isEditing = false;
-    renderDocumentList();
-  });
-  document.getElementById('edit-mode-btn').addEventListener('click', () => {
-    state.isEditing = true;
-    renderDocumentDetail();
-  });
-  document.getElementById('delete-doc-btn').addEventListener('click', deleteDocument);
-  document.getElementById('add-comment-btn').addEventListener('click', addComment);
-}
-
-async function addComment() {
-  const btn = document.getElementById('add-comment-btn');
-  const text = document.getElementById('new-comment-text').value.trim();
-  if (!text) return;
-  btn.disabled = true;
-  btn.textContent = 'Posting...';
-  try {
-    await api('/api/collections/comments/records', {
-      method: 'POST',
-      body: JSON.stringify({ text, document: state.activeDocument.id, author: state.user.id })
-    });
-    await api('/api/collections/activity_log/records', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'comment_added', details: text,
-        user: state.user.id, workspace: state.activeWorkspace.id
-      })
-    }).catch(() => {});
-    await loadComments(state.activeDocument.id);
-    renderDocumentDetail();
-    toast('Comment posted');
-  } catch (err) {
-    toast('Failed: ' + err.message);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Post comment';
+      );
     }
-  }
-}
 
-async function saveDocument() {
-  const btn = document.getElementById('save-doc-btn');
-  const title = document.getElementById('edit-doc-title').value.trim();
-  const content = document.getElementById('edit-doc-content').value.trim();
-  if (!title) return;
-  btn.disabled = true;
-  btn.textContent = 'Saving...';
-  try {
-    await api(`/api/collections/documents/records/${state.activeDocument.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ title, content })
-    });
-    state.activeDocument.title = title;
-    state.activeDocument.content = content;
-    state.isEditing = false;
-    renderDocumentDetail();
-    toast('Document updated successfully');
-  } catch (err) {
-    toast('Failed to update: ' + err.message);
-    btn.disabled = false;
-    btn.textContent = 'Save Changes';
-  }
-}
+    function TiltCard({ title, description, icon, delay }) {
+      const cardRef = useRef(null);
+      const [style, setStyle] = useState({});
 
-async function deleteDocument() {
-  if (!confirm(`Are you sure you want to delete "${state.activeDocument.title}"?`)) return;
-  const btn = document.getElementById('delete-doc-btn');
-  btn.disabled = true;
-  btn.textContent = 'Deleting...';
-  try {
-    await api(`/api/collections/documents/records/${state.activeDocument.id}`, { method: 'DELETE' });
-    toast('Document deleted');
-    state.activeDocument = null;
-    state.isEditing = false;
-    await loadDocuments();
-    renderDocumentList();
-  } catch (err) {
-    toast('Failed to delete: ' + err.message);
-    btn.disabled = false;
-    btn.textContent = 'Delete';
-  }
-}
+      useEffect(() => {
+        if (window.gsap && cardRef.current) {
+          gsap.fromTo(cardRef.current, 
+            { y: 30, opacity: 0 }, 
+            { y: 0, opacity: 1, duration: 0.8, delay: delay, ease: "power3.out" }
+          );
+        }
+      }, [delay]);
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str || '';
-  return div.innerHTML;
-}
+      const handleMouseMove = (e) => {
+        if (!cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        
+        setStyle({
+          transform: `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) translateY(-5px)`,
+          boxShadow: `0 15px 30px -10px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1), ${-x * 20}px ${-y * 20}px 30px rgba(100, 116, 139, 0.05)`
+        });
+      };
 
-if (state.token && state.user) enterApp();
-</script>
+      return (
+        <div 
+          ref={cardRef}
+          onMouseMove={handleMouseMove} 
+          onMouseLeave={() => setStyle({ transform: 'perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(0)', boxShadow: '' })}
+          className="glass-panel p-8 rounded-2xl transition-all duration-200 ease-out flex flex-col items-start gap-4" 
+          style={style}
+        >
+          <div className="p-3 bg-dark-800 rounded-lg border border-dark-700 text-accent-400">
+            {icon}
+          </div>
+          <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
+          <p className="text-sm text-gray-400 leading-relaxed font-light">{description}</p>
+        </div>
+      );
+    }
+
+    function LandingPage({ onOpenAuth }) {
+      const vantaRef = useRef(null);
+      const vantaEffect = useRef(null);
+      const [demoMode, setDemoMode] = useState('workspace');
+      const [activeDoc, setActiveDoc] = useState('architecture');
+      const [query, setQuery] = useState('');
+      const [comment, setComment] = useState('');
+      const [comments, setComments] = useState([
+        { author: 'Maya', text: 'Can we document the auth flow here?', time: '8m' },
+        { author: 'Alex', text: 'Added the API endpoint details below.', time: '21m' }
+      ]);
+      const [events, setEvents] = useState([
+        { action: 'updated', actor: 'Alex', text: 'API Reference', time: '4m ago' },
+        { action: 'commented', actor: 'Maya', text: 'Architecture', time: '8m ago' },
+        { action: 'created', actor: 'Sam', text: 'Deployment Guide', time: '32m ago' }
+      ]);
+
+      const demoDocs = [
+        { id: 'architecture', title: 'Architecture', type: 'Design', author: 'Alex', updated: '4m ago', content: 'System architecture, services, data flow and deployment decisions.', comments: 6 },
+        { id: 'api', title: 'API Reference', type: 'Reference', author: 'Maya', updated: '12m ago', content: 'Endpoints, authentication, request formats and response examples.', comments: 11 },
+        { id: 'deployment', title: 'Deployment Guide', type: 'Guide', author: 'Sam', updated: '32m ago', content: 'Environment setup, deployment steps and production configuration.', comments: 3 },
+        { id: 'decisions', title: 'Technical Decisions', type: 'Decision', author: 'Alex', updated: '1h ago', content: 'Why the team chose the current architecture and implementation tradeoffs.', comments: 8 }
+      ];
+
+      const workspaces = [
+        { name: 'Product Engineering', count: 18 },
+        { name: 'Design Docs', count: 7 },
+        { name: 'Onboarding', count: 11 }
+      ];
+
+      const selectedDoc = demoDocs.find(d => d.id === activeDoc) || demoDocs[0];
+      const filteredDocs = demoDocs.filter(d => {
+        const q = query.toLowerCase();
+        return !q || d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q) || d.type.toLowerCase().includes(q);
+      });
+
+      useEffect(() => {
+        if (!vantaEffect.current && window.VANTA && vantaRef.current) {
+          vantaEffect.current = window.VANTA.NET({
+            el: vantaRef.current, mouseControls: true, touchControls: true, gyroControls: false,
+            minHeight: 200, minWidth: 200, scale: 1, scaleMobile: 1,
+            color: 0x475569, backgroundColor: 0x050505, points: 12, maxDistance: 22, spacing: 16, showDots: true
+          });
+        }
+        if (window.gsap) gsap.fromTo('.hero-enter', { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: .8, stagger: .08, ease: 'power3.out' });
+        return () => { if (vantaEffect.current) vantaEffect.current.destroy(); };
+      }, []);
+
+      const addEvent = (action, actor, text) => {
+        setEvents(prev => [{ action, actor, text, time: 'just now' }, ...prev].slice(0, 6));
+      };
+
+      const addComment = () => {
+        if (!comment.trim()) return;
+        setComments(prev => [...prev, { author: 'You', text: comment.trim(), time: 'just now' }]);
+        addEvent('commented', 'You', selectedDoc.title);
+        setComment('');
+      };
+
+      return (
+        <div className="w-full min-h-screen flex flex-col relative overflow-hidden bg-dark-950">
+          <div ref={vantaRef} id="vanta-bg"></div>
+          <div className="landing-noise"></div>
+
+          <nav className="relative z-20 w-full px-6 md:px-10 py-5 flex items-center justify-between border-b border-white/5 bg-dark-950/35 backdrop-blur-xl">
+            <div className="flex items-center gap-3 text-gray-100">
+              <div className="text-accent-400"><Icons.Logo /></div>
+              <span className="text-lg font-bold tracking-tight">NexusDocs</span>
+              <span className="hidden sm:inline text-[10px] font-mono text-gray-600 border border-dark-700 px-2 py-1 rounded-full">COLLABORATIVE KNOWLEDGE HUB</span>
+            </div>
+            <div className="flex items-center gap-2 md:gap-4">
+              <button onClick={() => document.getElementById('product-demo')?.scrollIntoView({behavior:'smooth'})} className="hidden md:block text-sm text-gray-400 hover:text-white px-3 py-2">Explore</button>
+              <button onClick={() => onOpenAuth('login')} className="text-sm text-gray-400 hover:text-white px-3 py-2">Log in</button>
+              <button onClick={() => onOpenAuth('signup')} className="tactile-button text-sm font-semibold text-gray-100 px-5 py-2.5 rounded-lg">Start workspace</button>
+            </div>
+          </nav>
+
+          <main className="relative z-20 flex-1 px-5 md:px-8 pt-16 md:pt-24 pb-24">
+            <section className="max-w-7xl mx-auto grid lg:grid-cols-[.9fr_1.1fr] gap-12 items-center">
+              <div className="max-w-3xl">
+                <div className="hero-enter inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-dark-700 bg-dark-900/55 backdrop-blur text-gray-400 text-xs font-mono mb-7">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-pulse"></span>
+                  A workspace for living documentation
+                </div>
+                <h1 className="hero-enter text-5xl md:text-7xl font-semibold text-white leading-[1.02] tracking-[-0.045em] mb-7">
+                  Documents are only useful<br />
+                  <span className="text-gray-500">when teams can work with them.</span>
+                </h1>
+                <p className="hero-enter text-base md:text-lg text-gray-400 max-w-2xl leading-relaxed mb-9">
+                  NexusDocs brings workspaces, documents, search, comments and an activity history into one place — so a team can find information, review it and understand what changed.
+                </p>
+                <div className="hero-enter flex flex-wrap gap-3">
+                  <button onClick={() => onOpenAuth('signup')} className="bg-white hover:bg-gray-100 text-dark-950 font-semibold px-6 py-3 rounded-lg transition-transform hover:-translate-y-0.5">Create your workspace</button>
+                  <button onClick={() => document.getElementById('product-demo')?.scrollIntoView({behavior:'smooth'})} className="border border-dark-700 bg-dark-900/50 hover:bg-dark-800 text-gray-200 px-6 py-3 rounded-lg backdrop-blur">See how it works →</button>
+                </div>
+                <div className="hero-enter flex flex-wrap gap-x-6 gap-y-2 mt-7 text-xs text-gray-600 font-mono">
+                  <span>Workspaces</span><span>Documents</span><span>Search</span><span>Comments</span><span>Activity history</span>
+                </div>
+              </div>
+
+              {/* Real product-shaped preview rather than an abstract graphic */}
+              <div className="hero-enter rounded-2xl border border-white/10 bg-dark-950/75 backdrop-blur-2xl shadow-2xl overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-white/[.02]">
+                  <span className="w-2 h-2 rounded-full bg-gray-500"></span><span className="w-2 h-2 rounded-full bg-gray-700"></span><span className="w-2 h-2 rounded-full bg-gray-800"></span>
+                  <span className="ml-3 text-[10px] font-mono text-gray-600">Product Engineering</span>
+                  <span className="ml-auto text-[10px] font-mono text-gray-500">18 DOCUMENTS</span>
+                </div>
+                <div className="grid grid-cols-[150px_1fr] min-h-[380px]">
+                  <div className="border-r border-white/5 bg-black/10 p-3">
+                    <div className="text-[9px] font-mono uppercase tracking-widest text-gray-600 px-2 mb-3">Workspaces</div>
+                    {workspaces.map((w,i)=><div key={w.name} className={`px-2.5 py-2 rounded-md text-[11px] mb-1 ${i===0?'bg-dark-800 text-gray-200':'text-gray-600'}`}><div>{w.name}</div><div className="text-[9px] text-gray-700 mt-1">{w.count} docs</div></div>)}
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-5">
+                      <div><div className="text-[9px] font-mono text-gray-600 uppercase">Workspace</div><div className="text-lg text-white mt-1">Product Engineering</div></div>
+                      <div className="text-[9px] font-mono text-gray-600">RECENT ACTIVITY</div>
+                    </div>
+                    <div className="space-y-2">
+                      {demoDocs.slice(0,3).map(d=><button key={d.id} onClick={()=>{setActiveDoc(d.id);document.getElementById('product-demo')?.scrollIntoView({behavior:'smooth'});setDemoMode('workspace')}} className="w-full text-left border border-dark-800 hover:border-dark-600 bg-dark-900/60 rounded-lg p-3 transition-all hover:-translate-y-px">
+                        <div className="flex justify-between"><span className="text-sm text-gray-200">{d.title}</span><span className="text-[9px] font-mono text-gray-600">{d.updated}</span></div>
+                        <div className="text-[10px] text-gray-600 mt-1">{d.type} · {d.comments} comments · {d.author}</div>
+                      </button>)}
+                    </div>
+                    <div className="mt-5 pt-4 border-t border-white/5 flex gap-5 text-[10px] font-mono text-gray-600"><span><b className="text-gray-300">18</b> docs</span><span><b className="text-gray-300">42</b> comments</span><span><b className="text-gray-300">126</b> events</span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="product-demo" className="max-w-7xl mx-auto mt-24 scroll-mt-8">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-7">
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-[.2em] text-gray-600 mb-2">Product workflow</div>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-white">See what a team actually does inside NexusDocs.</h2>
+                  <p className="text-sm text-gray-500 mt-2">These interactions mirror the actual workspace capabilities instead of being decorative demos.</p>
+                </div>
+                <div className="flex bg-dark-900/80 border border-dark-800 rounded-lg p-1 backdrop-blur">
+                  {[['workspace','Workspace'],['search','Search'],['review','Review & activity']].map(([id,label])=><button key={id} onClick={()=>setDemoMode(id)} className={`px-3 py-2 text-xs rounded-md transition-all ${demoMode===id?'bg-dark-700 text-white':'text-gray-500 hover:text-gray-300'}`}>{label}</button>)}
+                </div>
+              </div>
+
+              <div className="demo-shell border border-white/10 bg-dark-950/80 backdrop-blur-2xl rounded-2xl overflow-hidden shadow-2xl">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-white/[.02]">
+                  <span className="w-2 h-2 rounded-full bg-gray-500"></span><span className="w-2 h-2 rounded-full bg-gray-700"></span><span className="w-2 h-2 rounded-full bg-gray-800"></span>
+                  <span className="ml-3 text-[10px] font-mono text-gray-600">nexusdocs / Product Engineering</span>
+                  <span className="ml-auto text-[10px] font-mono text-gray-600">LIVE PREVIEW</span>
+                </div>
+
+                {demoMode==='workspace' && <div className="grid lg:grid-cols-[180px_1fr_280px] min-h-[500px]">
+                  <div className="border-r border-white/5 p-4 bg-black/10">
+                    <div className="text-[9px] font-mono uppercase tracking-widest text-gray-600 mb-3">Workspaces</div>
+                    {workspaces.map((w,i)=><button key={w.name} onClick={()=>setQuery('')} className={`w-full text-left px-3 py-2.5 rounded-lg mb-1 text-[11px] ${i===0?'bg-dark-800 text-gray-200':'text-gray-600 hover:text-gray-400'}`}>{w.name}<span className="block text-[9px] text-gray-700 mt-1">{w.count} documents</span></button>)}
+                  </div>
+                  <div className="p-5 overflow-y-auto">
+                    <div className="flex items-center justify-between mb-5"><div><div className="text-[9px] font-mono text-gray-600 uppercase">Documents</div><div className="text-lg text-white mt-1">Product Engineering</div></div><button onClick={()=>{addEvent('created','You','New document');}} className="text-[10px] border border-dark-700 px-3 py-2 rounded-lg text-gray-300 hover:bg-dark-800">+ New document</button></div>
+                    <div className="space-y-2">
+                      {demoDocs.map(d=><button key={d.id} onClick={()=>setActiveDoc(d.id)} className={`w-full text-left p-4 rounded-xl border transition-all ${activeDoc===d.id?'border-gray-500 bg-dark-800/80':'border-dark-800 bg-dark-900/40 hover:border-dark-600'}`}><div className="flex justify-between"><span className="text-sm text-gray-200">{d.title}</span><span className="text-[9px] font-mono text-gray-600">{d.updated}</span></div><div className="text-[10px] text-gray-600 mt-2">{d.type} · {d.author} · {d.comments} comments</div><div className="text-xs text-gray-500 mt-3 leading-relaxed">{d.content}</div></button>)}
+                    </div>
+                  </div>
+                  <div className="border-l border-white/5 p-5 bg-white/[.015]">
+                    <div className="text-[9px] font-mono uppercase tracking-widest text-gray-600 mb-4">Document details</div>
+                    <div className="text-lg text-white">{selectedDoc.title}</div><div className="text-[10px] text-gray-600 mt-1">{selectedDoc.type} · updated {selectedDoc.updated}</div>
+                    <p className="text-sm text-gray-500 leading-relaxed mt-5">{selectedDoc.content}</p>
+                    <div className="mt-6 pt-5 border-t border-white/5"><div className="text-[9px] font-mono text-gray-600 uppercase">Collaboration</div><div className="text-sm text-gray-300 mt-2">{selectedDoc.comments} comments</div><div className="text-[10px] text-gray-600 mt-1">Review and discuss the document with your team.</div></div>
+                  </div>
+                </div>}
+
+                {demoMode==='search' && <div className="min-h-[500px] p-6 md:p-10">
+                  <div className="max-w-3xl mx-auto"><div className="text-[9px] font-mono uppercase tracking-widest text-gray-600 mb-3">Find information across your workspace</div><div className="relative"><Icons.Search/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search documents by title or content..." className="w-full mt-2 pl-10 pr-4 py-4 bg-dark-900 border border-dark-700 rounded-xl outline-none text-gray-200 placeholder-gray-600 focus:border-gray-500" /></div><div className="mt-7 text-[10px] font-mono text-gray-600 uppercase">{filteredDocs.length} matching documents</div><div className="mt-3 space-y-2">{filteredDocs.map(d=><button key={d.id} onClick={()=>{setActiveDoc(d.id);setDemoMode('workspace')}} className="w-full text-left p-4 border border-dark-800 bg-dark-900/50 hover:border-dark-600 rounded-xl"><div className="flex justify-between"><span className="text-sm text-gray-200">{d.title}</span><span className="text-[9px] font-mono text-gray-600">{d.type}</span></div><p className="text-xs text-gray-500 mt-2">{d.content}</p><div className="text-[9px] text-gray-700 mt-3">Updated {d.updated} · {d.comments} comments</div></button>)}{filteredDocs.length===0&&<div className="py-14 text-center text-sm text-gray-600">No documents match “{query}”.</div>}</div></div>
+                </div>}
+
+                {demoMode==='review' && <div className="grid lg:grid-cols-[1fr_320px] min-h-[500px]">
+                  <div className="p-6 md:p-10"><div className="text-[9px] font-mono uppercase tracking-widest text-gray-600">Reviewing</div><h3 className="text-2xl text-white mt-2">{selectedDoc.title}</h3><p className="text-sm text-gray-500 mt-4 max-w-2xl leading-relaxed">{selectedDoc.content}</p><div className="mt-8 border border-dark-800 rounded-xl bg-dark-900/50 p-5"><div className="text-[9px] font-mono uppercase text-gray-600 mb-4">Comments</div>{comments.map((c,i)=><div key={i} className="pb-4 mb-4 border-b border-white/5"><div className="flex justify-between"><span className="text-xs text-gray-300">{c.author}</span><span className="text-[9px] font-mono text-gray-600">{c.time}</span></div><p className="text-xs text-gray-500 mt-2">{c.text}</p></div>)}<div className="flex gap-2"><input value={comment} onChange={e=>setComment(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addComment()} placeholder="Add a review comment..." className="flex-1 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2.5 text-xs outline-none text-gray-300 placeholder-gray-700"/><button onClick={addComment} className="bg-gray-200 text-dark-950 px-4 rounded-lg text-xs font-semibold">Comment</button></div></div></div>
+                  <div className="border-l border-white/5 p-5 bg-white/[.015]"><div className="text-[9px] font-mono uppercase tracking-widest text-gray-600 mb-4">Activity history</div><div className="space-y-1">{events.map((e,i)=><div key={i} className="py-3 border-b border-white/5"><div className="text-[10px] font-mono text-gray-500">{e.action}</div><div className="text-xs text-gray-300 mt-1"><span className="text-gray-500">{e.actor}</span> · {e.text}</div><div className="text-[9px] text-gray-700 mt-1">{e.time}</div></div>)}</div><button onClick={()=>addEvent('updated','You',selectedDoc.title)} className="mt-5 w-full border border-dark-700 hover:bg-dark-800 rounded-lg py-2.5 text-xs text-gray-300">Simulate document update</button></div>
+                </div>}
+              </div>
+            </section>
+
+            <section className="max-w-7xl mx-auto mt-20 grid md:grid-cols-3 gap-4">
+              {[
+                ['Find it','Search your workspace instead of digging through folders.'],
+                ['Review it','Comment directly on documents and keep discussion with the knowledge.'],
+                ['Trace it','Use the activity history to understand what changed and when.']
+              ].map(([title,text])=><div key={title} className="border border-white/5 bg-dark-950/50 backdrop-blur rounded-xl p-6"><div className="text-sm font-medium text-white">{title}</div><p className="text-sm text-gray-600 mt-2 leading-relaxed">{text}</p></div>)}
+            </section>
+          </main>
+        </div>
+      );
+    }
+
+    function AuthModal({ initialMode, onClose, onLogin, api }) {
+      const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [name, setName] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState('');
+      const modalRef = useRef(null);
+
+      useEffect(() => {
+        if(window.gsap && modalRef.current) {
+          gsap.fromTo(modalRef.current, { scale: 0.95, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+        }
+      }, []);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault(); setError(''); setLoading(true);
+        try {
+          let result;
+          if (isSignUp) {
+            result = await api('/api/collections/users/records', {
+              method: 'POST', body: JSON.stringify({ email, password, passwordConfirm: password, name })
+            });
+            result = await api('/api/collections/users/auth-with-password', {
+              method: 'POST', body: JSON.stringify({ identity: email, password })
+            });
+          } else {
+            result = await api('/api/collections/users/auth-with-password', {
+              method: 'POST', body: JSON.stringify({ identity: email, password })
+            });
+          }
+          onLogin(result.token, result.record);
+        } catch (err) { setError(err.message); } 
+        finally { setLoading(false); }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/70 backdrop-blur-md">
+          <div ref={modalRef} className="relative w-full max-w-md glass-panel rounded-2xl shadow-float p-8 border border-dark-700/50">
+            <button onClick={onClose} className="absolute top-5 right-5 text-gray-500 hover:text-gray-300 transition-colors p-1 rounded-md hover:bg-dark-800">
+              <Icons.Close />
+            </button>
+            
+            <div className="mb-8">
+              <div className="w-10 h-10 bg-dark-800 border border-dark-700 rounded-xl flex items-center justify-center text-accent-400 mb-4 shadow-inner">
+                <Icons.Logo />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-100 tracking-tight">{isSignUp ? 'Initialize Node' : 'System Authorization'}</h2>
+              <p className="text-gray-500 mt-2 text-sm font-light leading-relaxed">{isSignUp ? 'Create your profile to deploy a secure workspace.' : 'Enter credentials to access the knowledge matrix.'}</p>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-950/20 border border-red-900/50 text-red-400 text-xs rounded-lg font-mono">
+                ERR: {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {isSignUp && (
+                <div>
+                  <label className="block text-[10px] font-mono font-medium uppercase tracking-widest text-gray-500 mb-2">Designation</label>
+                  <input type="text" required value={name} onChange={e => setName(e.target.value)} 
+                    className="w-full px-4 py-3 bg-dark-900/50 border border-dark-700 rounded-xl focus:border-accent-500 focus:ring-1 focus:ring-accent-500/50 focus:outline-none transition-all text-sm text-gray-100 placeholder-gray-600 shadow-inner" placeholder="Operator Name" />
+                </div>
+              )}
+              <div>
+                <label className="block text-[10px] font-mono font-medium uppercase tracking-widest text-gray-500 mb-2">Network ID (Email)</label>
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} 
+                  className="w-full px-4 py-3 bg-dark-900/50 border border-dark-700 rounded-xl focus:border-accent-500 focus:ring-1 focus:ring-accent-500/50 focus:outline-none transition-all text-sm text-gray-100 placeholder-gray-600 shadow-inner" placeholder="id@network.com" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono font-medium uppercase tracking-widest text-gray-500 mb-2">Passkey</label>
+                <input type="password" required minLength="8" value={password} onChange={e => setPassword(e.target.value)} 
+                  className="w-full px-4 py-3 bg-dark-900/50 border border-dark-700 rounded-xl focus:border-accent-500 focus:ring-1 focus:ring-accent-500/50 focus:outline-none transition-all text-sm text-gray-100 placeholder-gray-600 shadow-inner" placeholder="••••••••" />
+              </div>
+              
+              <button type="submit" disabled={loading} 
+                className="tactile-button w-full py-3.5 text-gray-200 font-semibold rounded-xl transition-all disabled:opacity-70 mt-6 text-sm flex items-center justify-center gap-2">
+                {loading ? <span className="w-4 h-4 border-2 border-t-transparent border-gray-400 rounded-full animate-spin"></span> : null}
+                {loading ? 'Processing...' : (isSignUp ? 'Initialize' : 'Authenticate')}
+              </button>
+            </form>
+
+            <div className="mt-8 text-center border-t border-dark-800/50 pt-6">
+              <button onClick={() => { setIsSignUp(!isSignUp); setError(''); }} type="button" 
+                className="text-xs font-mono text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest">
+                {isSignUp ? 'Existing Node? Sign in' : "New Operator? Sign up"}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MainApp({ user, api, onLogout, showToast }) {
+      const [workspaces, setWorkspaces] = useState([]);
+      const [activeWorkspace, setActiveWorkspace] = useState(null);
+      const [activeDocument, setActiveDocument] = useState(null);
+      const [showActivityLog, setShowActivityLog] = useState(false);
+      const searchInputRef = useRef(null);
+
+      const [pinnedDocs, setPinnedDocs] = useState(() => JSON.parse(localStorage.getItem('nd_pinned') || '[]'));
+
+      useEffect(() => { loadWorkspaces(); }, []);
+      useEffect(() => { localStorage.setItem('nd_pinned', JSON.stringify(pinnedDocs)); }, [pinnedDocs]);
+
+      // Global Keyboard Shortcut: Ctrl+K
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            if (searchInputRef.current) searchInputRef.current.focus();
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, []);
+
+      const togglePin = (docId, e) => {
+        if(e) e.stopPropagation();
+        setPinnedDocs(prev => prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]);
+      };
+
+      const loadWorkspaces = async () => {
+        try {
+          const res = await api('/api/collections/workspaces/records?sort=-created');
+          const loaded = res.items || [];
+          setWorkspaces(loaded);
+          if (loaded.length > 0 && !activeWorkspace) setActiveWorkspace(loaded[0]);
+        } catch (err) { showToast('Error fetching workspaces'); }
+      };
+
+      const selectWorkspace = (ws) => {
+        setActiveWorkspace(ws);
+        setActiveDocument(null);
+        setShowActivityLog(false);
+      }
+
+      return (
+        <div className="flex flex-1 h-screen overflow-hidden bg-dark-950">
+          <Sidebar user={user} workspaces={workspaces} activeWorkspace={activeWorkspace} 
+            onSelectWorkspace={selectWorkspace} onWorkspaceCreated={loadWorkspaces} 
+            api={api} onLogout={onLogout} showToast={showToast}
+            onShowActivity={() => { setShowActivityLog(true); setActiveDocument(null); }}
+            isShowingActivity={showActivityLog} />
+            
+          <main className="flex-1 flex flex-col h-full overflow-hidden bg-dark-950 z-10 border-l border-dark-800">
+            {showActivityLog ? (
+              <ActivityDashboard api={api} />
+            ) : activeWorkspace ? (
+              activeDocument ? (
+                <DocumentDetail workspace={activeWorkspace} doc={activeDocument} api={api} user={user}
+                  onBack={() => setActiveDocument(null)} onUpdate={(updatedDoc) => setActiveDocument(updatedDoc)}
+                  onDelete={() => setActiveDocument(null)} showToast={showToast} 
+                  isPinned={pinnedDocs.includes(activeDocument.id)} onTogglePin={() => togglePin(activeDocument.id)} />
+              ) : (
+                <WorkspaceView workspace={activeWorkspace} api={api} user={user} onSelectDocument={setActiveDocument} showToast={showToast} pinnedDocs={pinnedDocs} onTogglePin={togglePin} searchInputRef={searchInputRef} />
+              )
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-600 bg-dark-900/30">
+                <div className="w-16 h-16 rounded-full border border-dark-800 bg-dark-950 flex items-center justify-center mb-6 shadow-tactile text-dark-700">
+                  <Icons.Folder />
+                </div>
+                <p className="font-mono text-xs uppercase tracking-widest text-gray-500">Initialize a workspace to begin</p>
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    function Sidebar({ user, workspaces, activeWorkspace, onSelectWorkspace, onWorkspaceCreated, api, onLogout, showToast, onShowActivity, isShowingActivity }) {
+      const [newWsName, setNewWsName] = useState('');
+      const [creating, setCreating] = useState(false);
+
+      const handleCreate = async (e) => {
+        e.preventDefault(); if (!newWsName.trim()) return;
+        setCreating(true);
+        try {
+          await api('/api/collections/workspaces/records', { method: 'POST', body: JSON.stringify({ wname: newWsName, owner: user.id }) });
+          setNewWsName(''); onWorkspaceCreated(); showToast('Workspace initialized.');
+        } catch (err) { showToast('Error creating workspace.'); } 
+        finally { setCreating(false); }
+      };
+
+      return (
+        <div className="w-64 bg-dark-950 flex flex-col h-full flex-shrink-0 font-sans border-r border-dark-800/50">
+          <div className="p-6 pb-4">
+            <div className="flex items-center gap-3 text-gray-200 mb-6 font-semibold">
+              <div className="text-accent-500"><Icons.Logo /></div>
+              <span className="text-sm tracking-tight">NexusDocs</span>
+            </div>
+          </div>
+
+          <div className="px-4 py-2">
+            <button onClick={onShowActivity} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${isShowingActivity ? 'bg-dark-800 text-gray-200 shadow-inner' : 'text-gray-500 hover:bg-dark-900 hover:text-gray-300'}`}>
+              <Icons.Activity /> Telemetry
+            </button>
+          </div>
+
+          <div className="px-4 py-4 flex-1 overflow-y-auto no-scrollbar">
+            <div className="text-[10px] font-mono font-medium text-gray-600 uppercase tracking-widest mb-3 px-3 mt-4">Workspaces</div>
+            <div className="space-y-1">
+              {workspaces.map(ws => (
+                <button key={ws.id} onClick={() => onSelectWorkspace(ws)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${!isShowingActivity && activeWorkspace?.id === ws.id ? 'bg-dark-800 text-gray-200 shadow-inner border border-dark-700/50' : 'text-gray-500 hover:bg-dark-900 hover:text-gray-300 border border-transparent'}`}>
+                  <div className={!isShowingActivity && activeWorkspace?.id === ws.id ? "text-accent-400" : ""}><Icons.Folder /></div> 
+                  <span className="truncate">{ws.wname}</span>
+                </button>
+              ))}
+            </div>
+
+            <form onSubmit={handleCreate} className="mt-6 px-1">
+              <div className="relative group">
+                <input type="text" placeholder="New workspace..." value={newWsName} onChange={e => setNewWsName(e.target.value)}
+                  className="w-full bg-dark-900 border border-dark-800 rounded-lg px-4 py-2.5 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-accent-600 transition-colors shadow-inner" />
+                {newWsName && (
+                  <button type="submit" disabled={creating} className="absolute right-2 top-2 p-1.5 bg-dark-700 text-gray-300 rounded hover:bg-dark-600 transition-colors flex items-center justify-center">
+                    {creating ? <span className="w-3 h-3 border border-t-gray-300 rounded-full animate-spin"></span> : <Icons.Plus/>}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          <div className="p-5 border-t border-dark-800/50 bg-dark-900/20 mt-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 rounded-lg border border-dark-700 bg-dark-800 text-gray-400 flex items-center justify-center font-bold text-xs shadow-inner">
+                {(user?.name || user?.email || 'U')[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-gray-300 text-sm truncate">{user?.name || 'User'}</div>
+                <div className="text-[10px] text-gray-500 truncate font-mono">{user?.email}</div>
+              </div>
+            </div>
+            <button onClick={onLogout} className="flex items-center justify-center gap-2 text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-gray-200 bg-dark-900 hover:bg-dark-800 py-2.5 rounded-lg transition-colors w-full border border-dark-800 shadow-sm">
+              <Icons.LogOut /> Disconnect
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function ActivityDashboard({ api }) {
+      const [logs, setLogs] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const chartRef = useRef(null);
+      const chartInstance = useRef(null);
+
+      useEffect(() => {
+        const fetchLogs = async () => {
+          try {
+            const res = await api('/api/collections/activity_log/records?sort=-created&expand=user,workspace&limit=100');
+            const items = res.items || [];
+            setLogs(items);
+            renderChart(items);
+          } catch (err) { console.error(err); } 
+          finally { setLoading(false); }
+        };
+        fetchLogs();
+        return () => { if(chartInstance.current) chartInstance.current.destroy(); }
+      }, []);
+
+      const renderChart = (dataLogs) => {
+        if (!chartRef.current || !window.Chart) return;
+        if (chartInstance.current) chartInstance.current.destroy();
+
+        const counts = {};
+        const today = new Date();
+        for(let i=6; i>=0; i--) {
+           let d = new Date(today);
+           d.setDate(d.getDate() - i);
+           counts[d.toLocaleDateString()] = 0;
+        }
+        
+        dataLogs.forEach(log => {
+           const d = new Date(log.created).toLocaleDateString();
+           if(counts[d] !== undefined) counts[d]++;
+        });
+
+        const ctx = chartRef.current.getContext('2d');
+        chartInstance.current = new window.Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(counts),
+            datasets: [{
+              label: 'Events',
+              data: Object.values(counts),
+              backgroundColor: '#3f4756',
+              hoverBackgroundColor: '#64748b',
+              borderRadius: 6,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: '#1a1d24' }, border: { display: false }, ticks: { color: '#64748b', stepSize: 1, font: {family: 'JetBrains Mono', size: 10} } },
+              x: { grid: { display: false }, border: { display: false }, ticks: { color: '#64748b', font: {family: 'JetBrains Mono', size: 10} } }
+            }
+          }
+        });
+      };
+
+      return (
+        <div className="flex-1 overflow-y-auto p-8 lg:p-12 w-full bg-dark-950">
+          <header className="mb-10 max-w-4xl mx-auto">
+            <h1 className="text-3xl font-bold text-gray-100 flex items-center gap-3">
+               Telemetry Array
+            </h1>
+            <p className="text-gray-500 mt-2 text-sm font-light">System-wide audit trail and analytics.</p>
+          </header>
+
+          <div className="max-w-4xl mx-auto bg-dark-900 border border-dark-800 rounded-xl p-8 mb-10 h-80 shadow-tactile">
+             <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-6">Activity Volume (7 Days)</div>
+             <div className="h-56 w-full"><canvas ref={chartRef}></canvas></div>
+          </div>
+
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-6 border-b border-dark-800 pb-3">Event Stream</div>
+            {loading ? (
+               <div className="text-gray-600 font-mono text-xs py-4 flex justify-center"><span className="animate-pulse">Fetching records...</span></div>
+            ) : logs.length === 0 ? (
+               <div className="text-gray-600 font-mono text-xs py-4 text-center">Stream empty.</div>
+            ) : (
+              logs.map((log) => {
+                const userName = log.expand?.user?.name || log.expand?.user?.email || 'Unknown_Node';
+                return (
+                  <div key={log.id} className="bg-dark-900/50 hover:bg-dark-900 transition-colors border border-dark-800 p-5 rounded-xl flex items-start gap-5">
+                    <div className="mt-1 p-2 bg-dark-800 rounded-lg text-accent-500 border border-dark-700 shadow-inner"><Icons.Activity/></div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-1.5">
+                        <div className="text-sm text-gray-300">
+                          <span className="font-semibold text-gray-100">{userName}</span> executed <span className="text-accent-400 font-mono text-[10px] uppercase bg-dark-800 border border-dark-700 px-1.5 py-0.5 rounded ml-1">{log.action}</span>
+                        </div>
+                        <div className="text-[10px] text-gray-500 font-mono bg-dark-950 px-2 py-1 rounded border border-dark-800">{new Date(log.created).toLocaleString()}</div>
+                      </div>
+                      <div className="text-sm text-gray-400 mt-2 font-light">
+                        {log.details}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function KnowledgeGraph({ documents, onNodeClick }) {
+      const svgRef = useRef();
+
+      useEffect(() => {
+        if (!documents || documents.length === 0 || !svgRef.current) return;
+        
+        d3.select(svgRef.current).selectAll("*").remove();
+
+        const width = svgRef.current.clientWidth;
+        const height = svgRef.current.clientHeight;
+
+        const nodes = [{ id: 'workspace_root', name: 'Root Hub', group: 1, radius: 18 }];
+        const links = [];
+
+        documents.forEach(doc => {
+           nodes.push({ id: doc.id, name: doc.title, group: 2, radius: 10, docRef: doc });
+           links.push({ source: 'workspace_root', target: doc.id });
+        });
+
+        const svg = d3.select(svgRef.current)
+            .attr("viewBox", [0, 0, width, height]);
+
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+            .force("charge", d3.forceManyBody().strength(-400))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collide", d3.forceCollide().radius(d => d.radius + 15));
+
+        const link = svg.append("g")
+            .attr("class", "links")
+            .selectAll("line")
+            .data(links)
+            .enter().append("line")
+            .attr("class", "link");
+
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("g")
+            .data(nodes)
+            .enter().append("g")
+            .attr("class", "node")
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended))
+            .on("click", (event, d) => {
+               if(d.group === 2 && onNodeClick) onNodeClick(d.docRef);
+            });
+
+        node.append("circle")
+            .attr("r", d => d.radius)
+            .attr("fill", d => d.group === 1 ? '#475569' : '#1a1d24');
+
+        node.append("text")
+            .text(d => d.name)
+            .attr('x', 16)
+            .attr('y', 4);
+
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node.attr("transform", d => `translate(${d.x},${d.y})`);
+        });
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x; d.fy = d.y;
+        }
+        function dragged(event, d) {
+            d.fx = event.x; d.fy = event.y;
+        }
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null; d.fy = null;
+        }
+
+      }, [documents, onNodeClick]);
+
+      return (
+        <div className="w-full h-full bg-dark-900 border border-dark-800 rounded-xl shadow-inner overflow-hidden relative">
+          <div className="absolute top-5 left-5 text-[10px] font-mono text-gray-500 uppercase tracking-widest pointer-events-none bg-dark-950/80 px-2 py-1 rounded backdrop-blur">Physics Node Map</div>
+          <svg ref={svgRef} className="w-full h-full cursor-grab active:cursor-grabbing"></svg>
+        </div>
+      );
+    }
+
+    function WorkspaceView({ workspace, api, user, onSelectDocument, showToast, pinnedDocs, onTogglePin, searchInputRef }) {
+      const [documents, setDocuments] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [searchQuery, setSearchQuery] = useState('');
+      
+      const [isDrafting, setIsDrafting] = useState(false);
+      const [newTitle, setNewTitle] = useState('');
+      const [newContent, setNewContent] = useState('');
+      const [creating, setCreating] = useState(false);
+      
+      const [viewMode, setViewMode] = useState('list');
+      const fileInputRef = useRef(null);
+
+      const loadDocs = async () => {
+        setLoading(true);
+        try {
+          const filter = encodeURIComponent(`workspace='${workspace.id}'`);
+          const res = await api(`/api/collections/documents/records?filter=${filter}&sort=-created&expand=author`);
+          setDocuments(res.items || []);
+        } catch (err) { showToast('Error fetching documents.'); } 
+        finally { setLoading(false); }
+      };
+
+      useEffect(() => { loadDocs(); setIsDrafting(false); setViewMode('list'); }, [workspace.id]);
+
+      // Trigger Prism.js syntax highlighting when typing in the live editor
+      useEffect(() => {
+         if(isDrafting && window.Prism) { setTimeout(() => window.Prism.highlightAll(), 0); }
+      }, [newContent, isDrafting]);
+
+      const handleCreate = async (e) => {
+        e.preventDefault(); if (!newTitle.trim()) return;
+        setCreating(true);
+        try {
+          const file = fileInputRef.current?.files[0];
+          let body;
+          if (file) {
+            const formData = new FormData();
+            formData.append('title', newTitle); formData.append('content', newContent);
+            formData.append('workspace', workspace.id); formData.append('author', user.id);
+            formData.append('attachment', file);
+            body = formData;
+          } else {
+            body = JSON.stringify({ title: newTitle, content: newContent, workspace: workspace.id, author: user.id });
+          }
+          await api('/api/collections/documents/records', { method: 'POST', body });
+          await api('/api/collections/activity_log/records', { method: 'POST', body: JSON.stringify({ action: 'document_created', details: newTitle, user: user.id, workspace: workspace.id }) }).catch(()=>{});
+
+          setNewTitle(''); setNewContent(''); if(fileInputRef.current) fileInputRef.current.value = '';
+          setIsDrafting(false); showToast('Document committed.'); loadDocs();
+        } catch (err) { showToast(`Error: ${err.message}`); } 
+        finally { setCreating(false); }
+      };
+
+      const filteredDocs = useMemo(() => {
+        const query = searchQuery.toLowerCase();
+        return documents.filter(d => (d.title || '').toLowerCase().includes(query) || (d.content || '').toLowerCase().includes(query));
+      }, [documents, searchQuery]);
+
+      const pinned = filteredDocs.filter(d => pinnedDocs.includes(d.id));
+      const unpinned = filteredDocs.filter(d => !pinnedDocs.includes(d.id));
+
+      const DocCard = ({ doc, isPinned }) => (
+        <div onClick={() => onSelectDocument(doc)}
+          className="bg-dark-900 border border-dark-800 hover:border-dark-600 rounded-xl p-6 cursor-pointer transition-all duration-200 group flex flex-col h-full shadow-tactile hover:shadow-float transform hover:-translate-y-1">
+          
+          <div className="flex justify-between items-start mb-3 gap-2">
+            <h3 className="text-lg font-semibold text-gray-200 group-hover:text-white transition-colors line-clamp-1">{doc.title}</h3>
+            <div className="flex gap-1 shrink-0">
+              <button onClick={(e) => onTogglePin(doc.id, e)} className={`p-1.5 rounded-md transition-colors ${isPinned ? 'text-yellow-500 bg-yellow-500/10' : 'text-gray-600 hover:text-gray-400 hover:bg-dark-800'}`}>
+                <Icons.Star filled={isPinned} />
+              </button>
+            </div>
+          </div>
+          <p className="text-gray-400 text-sm mb-6 line-clamp-3 leading-relaxed flex-1 font-light">
+            {doc.content || <span className="opacity-50 italic">Empty document matrix...</span>}
+          </p>
+          <div className="flex items-center gap-3 pt-4 border-t border-dark-800 mt-auto">
+            <div className="w-6 h-6 rounded-md border border-dark-700 bg-dark-950 text-gray-400 flex items-center justify-center font-bold text-[10px] shadow-inner">
+                {(doc.expand?.author?.name || doc.expand?.author?.email || 'U')[0].toUpperCase()}
+            </div>
+            <div className="text-[10px] text-gray-500 font-mono tracking-wide">
+              {new Date(doc.created).toLocaleDateString()}
+            </div>
+            {doc.attachment && <div className="ml-auto text-accent-500 bg-dark-950 p-1 rounded border border-dark-800"><Icons.File/></div>}
+          </div>
+        </div>
+      );
+
+      return (
+        <div className="flex-1 flex flex-col h-full relative">
+          
+          {/* Header Controls */}
+          <header className="px-10 pt-10 pb-6 border-b border-dark-800 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 shrink-0 bg-dark-950 z-10 sticky top-0">
+            <div>
+              <div className="text-[10px] font-mono font-medium text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                Active Workspace
+              </div>
+              <h1 className="text-3xl font-bold text-gray-100 tracking-tight">{workspace.wname}</h1>
+            </div>
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="flex bg-dark-900 border border-dark-800 rounded-lg p-1 shadow-inner">
+                 <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-dark-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`} title="Grid View"><Icons.Grid/></button>
+                 <button onClick={() => setViewMode('graph')} className={`p-2 rounded-md transition-all ${viewMode === 'graph' ? 'bg-dark-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`} title="Knowledge Graph View"><Icons.Network/></button>
+              </div>
+              <div className="relative w-full md:w-72 group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500"><Icons.Search/></div>
+                <input type="text" ref={searchInputRef} placeholder="Search matrix..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-12 py-2.5 bg-dark-900 border border-dark-800 rounded-lg text-sm focus:outline-none focus:border-accent-500 transition-all text-gray-200 placeholder-gray-600 shadow-inner" />
+                <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+                  <span className="text-[9px] font-mono text-gray-500 bg-dark-950 border border-dark-800 px-1.5 py-0.5 rounded shadow-sm">Ctrl K</span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div className="flex-1 overflow-y-auto p-10 bg-dark-950">
+            
+            {/* Live Document Editor Sandbox */}
+            {!isDrafting ? (
+              <div className="mb-10">
+                <button onClick={() => setIsDrafting(true)} className="w-full py-5 border-2 border-dashed border-dark-700 hover:border-accent-600 rounded-xl text-center flex items-center justify-center gap-3 transition-all duration-200 group bg-dark-900/50 hover:bg-dark-900">
+                  <div className="text-gray-500 group-hover:text-accent-400 transition-colors p-1 bg-dark-950 rounded-md border border-dark-800 group-hover:border-accent-600"><Icons.Plus /></div>
+                  <span className="text-sm font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">Initialize New Document</span>
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleCreate} className="bg-dark-900 border border-dark-700 rounded-2xl overflow-hidden mb-12 shadow-float">
+                <div className="bg-dark-950 border-b border-dark-800 px-5 py-3 flex items-center justify-between">
+                   <div className="text-[10px] font-mono text-accent-400 uppercase tracking-widest flex items-center gap-2">
+                     <span className="w-2 h-2 rounded-full bg-accent-500 animate-pulse"></span> Split-Pane Live Editor
+                  </div>
+                  <button type="button" onClick={() => setIsDrafting(false)} className="text-gray-500 hover:text-white transition-colors bg-dark-800 p-1.5 rounded-md"><Icons.Close/></button>
+                </div>
+                
+                <input type="text" placeholder="Document Title" required value={newTitle} onChange={e => setNewTitle(e.target.value)}
+                  className="w-full px-8 py-5 bg-transparent border-b border-dark-800 focus:ring-0 font-bold text-2xl outline-none placeholder-gray-700 text-gray-100" />
+                
+                <div className="flex flex-col md:flex-row min-h-[400px]">
+                  <div className="flex-1 border-r border-dark-800 relative bg-dark-950/50">
+                    <textarea placeholder="Write markdown here... Use # for headers, **bold**, etc." value={newContent} onChange={e => setNewContent(e.target.value)}
+                      className="w-full h-full p-8 bg-transparent border-none focus:ring-0 outline-none resize-none placeholder-gray-700 text-gray-300 font-mono text-sm leading-relaxed"></textarea>
+                  </div>
+                  <div className="flex-1 relative bg-dark-900 overflow-y-auto max-h-[500px]">
+                    {/* Live Markdown Render Output */}
+                    <div className="prose max-w-none p-8" dangerouslySetInnerHTML={{ __html: marked.parse(newContent) || '<em class="text-gray-700 text-sm font-mono tracking-widest uppercase">Live rendering engine waiting for input...</em>' }}></div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-5 border-t border-dark-800 bg-dark-950">
+                  <div className="relative group cursor-pointer">
+                    <input type="file" ref={fileInputRef} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                    <div className="flex items-center justify-center gap-2 text-xs font-mono text-gray-400 border border-dark-700 bg-dark-900 group-hover:bg-dark-800 px-4 py-2 rounded-lg transition-colors shadow-inner">
+                       <Icons.File /> Attach Binary File
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                     <button type="button" onClick={() => setIsDrafting(false)} className="px-5 py-2 rounded-lg text-gray-400 text-sm font-medium hover:text-gray-200 hover:bg-dark-800 transition-colors">Abort</button>
+                     <button type="submit" disabled={creating} className="tactile-button text-gray-100 px-6 py-2 rounded-lg text-sm font-bold disabled:opacity-70 flex items-center gap-2">
+                      {creating ? <span className="w-4 h-4 border-2 border-t-transparent border-gray-400 rounded-full animate-spin"></span> : null}
+                      {creating ? 'Committing...' : 'Commit to Matrix'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            {/* Content Display */}
+            {loading ? (
+               <div className="py-32 flex flex-col items-center justify-center text-gray-500 font-mono text-xs">
+                 <div className="w-8 h-8 border-2 border-dark-700 border-t-accent-500 rounded-full animate-spin mb-4"></div>
+                 Querying database...
+               </div>
+            ) : documents.length === 0 ? (
+              !isDrafting && (
+                <div className="py-24 border border-dashed border-dark-700 rounded-2xl text-center flex flex-col items-center bg-dark-900/30">
+                   <div className="text-dark-600 mb-4 bg-dark-950 p-4 rounded-full shadow-inner border border-dark-800"><Icons.Folder /></div>
+                   <p className="text-gray-500 font-mono text-xs uppercase tracking-widest">Null Array. Initialize your first document.</p>
+                </div>
+              )
+            ) : viewMode === 'graph' ? (
+               <div className="h-[600px] w-full">
+                  <KnowledgeGraph documents={documents} onNodeClick={onSelectDocument} />
+               </div>
+            ) : (
+              <div className="space-y-10">
+                {pinned.length > 0 && (
+                  <section>
+                    <h2 className="text-[10px] font-mono font-bold text-yellow-500/80 uppercase tracking-widest mb-4 flex items-center gap-2"><Icons.Star filled={true}/> Pinned Intel</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {pinned.map(doc => <DocCard key={doc.id} doc={doc} isPinned={true} />)}
+                    </div>
+                  </section>
+                )}
+                
+                {unpinned.length > 0 && (
+                  <section>
+                    {pinned.length > 0 && <h2 className="text-[10px] font-mono font-bold text-gray-600 uppercase tracking-widest mb-4 border-t border-dark-800 pt-8">Standard Documents</h2>}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {unpinned.map(doc => <DocCard key={doc.id} doc={doc} isPinned={false} />)}
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function DocumentDetail({ workspace, doc, api, user, onBack, onUpdate, onDelete, showToast, isPinned, onTogglePin }) {
+      const [comments, setComments] = useState([]);
+      const [newComment, setNewComment] = useState('');
+      const [editTitle, setEditTitle] = useState(doc.title);
+      const [editContent, setEditContent] = useState(doc.content || '');
+      const [saving, setSaving] = useState(false);
+      const [viewMode, setViewMode] = useState('read');
+
+      useEffect(() => { loadComments(); }, [doc.id]);
+
+      // Re-run prism highlighting when reading or editing
+      useEffect(() => {
+        if(window.Prism) { setTimeout(() => window.Prism.highlightAll(), 0); }
+      }, [viewMode, doc.content, editContent]);
+
+      const loadComments = async () => {
+        try {
+          const filter = encodeURIComponent(`document='${doc.id}'`);
+          const res = await api(`/api/collections/comments/records?filter=${filter}&sort=created&expand=author`);
+          setComments(res.items || []);
+        } catch (err) {}
+      };
+
+      const handleSave = async () => {
+        if (!editTitle.trim()) return;
+        setSaving(true);
+        try {
+          await api(`/api/collections/documents/records/${doc.id}`, { method: 'PATCH', body: JSON.stringify({ title: editTitle, content: editContent }) });
+          onUpdate({ ...doc, title: editTitle, content: editContent });
+          setViewMode('read'); showToast('Edits committed to matrix.');
+        } catch (err) { showToast('Error during commit.'); } 
+        finally { setSaving(false); }
+      };
+
+      const handleDelete = async () => {
+        // Implement custom modal instead of basic alert/confirm per rules
+        const conf = window.confirm(`Are you sure you want to purge "${doc.title}"?`); // fallback for now to keep it simple, but styled ideally
+        if (!conf) return;
+        try {
+          await api(`/api/collections/documents/records/${doc.id}`, { method: 'DELETE' });
+          showToast('Document purged.'); onDelete();
+        } catch (err) { showToast('Error during purge.'); }
+      };
+
+      const handleAddComment = async () => {
+        if (!newComment.trim()) return;
+        try {
+          await api('/api/collections/comments/records', { method: 'POST', body: JSON.stringify({ text: newComment, document: doc.id, author: user.id }) });
+          await api('/api/collections/activity_log/records', { method: 'POST', body: JSON.stringify({ action: 'comment_added', details: newComment.substring(0,50)+'...', user: user.id, workspace: workspace.id }) }).catch(()=>{});
+          setNewComment(''); loadComments();
+        } catch (err) {}
+      };
+
+      const authorName = doc.expand?.author?.name || doc.expand?.author?.email || 'Unknown';
+      const fileUrl = doc.attachment ? `${API_BASE}/api/files/documents/${doc.id}/${doc.attachment}` : null;
+      
+      if (viewMode === 'edit') {
+        return (
+          <div className="flex flex-col h-full bg-dark-900">
+             <header className="px-6 py-4 border-b border-dark-800 flex justify-between items-center bg-dark-950 shrink-0 shadow-sm">
+               <button onClick={() => setViewMode('read')} className="inline-flex items-center gap-2 text-xs font-mono text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-md hover:bg-dark-800 border border-transparent hover:border-dark-700">
+                 <Icons.ChevronLeft /> Abort Edit
+               </button>
+               <div className="text-[10px] font-mono text-accent-500 uppercase tracking-widest bg-accent-500/10 px-3 py-1 rounded-full border border-accent-500/20">Active Edit Mode</div>
+               <button onClick={handleSave} disabled={saving} className="tactile-button text-gray-100 px-5 py-2 rounded-md text-xs font-bold">
+                 {saving ? 'Saving...' : 'Commit Changes'}
+               </button>
+             </header>
+
+            <div className="flex-1 flex flex-col overflow-hidden">
+               <input value={editTitle} onChange={e => setEditTitle(e.target.value)}
+                 className="w-full px-10 py-6 text-2xl font-bold text-gray-100 border-b border-dark-800 focus:outline-none bg-dark-950 placeholder-gray-700 shrink-0" placeholder="Title" />
+               
+               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                 <div className="flex-1 border-r border-dark-800 relative bg-dark-950/50 h-full">
+                    <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
+                      className="w-full h-full p-10 text-sm text-gray-400 font-mono focus:outline-none resize-none bg-transparent leading-relaxed placeholder-gray-700" placeholder="Edit raw markdown..." />
+                 </div>
+                 <div className="flex-1 overflow-y-auto bg-dark-900 p-10 relative">
+                   <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: marked.parse(editContent) || '<em class="text-gray-700 font-mono text-sm tracking-widest uppercase">Live rendering engine...</em>' }}></div>
+                 </div>
+               </div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex-1 overflow-y-auto w-full flex justify-center scroll-smooth bg-dark-950">
+          <div className="w-full max-w-4xl p-10 lg:py-16">
+            <button onClick={onBack} className="inline-flex items-center gap-2 text-xs font-mono text-gray-500 hover:text-white mb-10 transition-all group px-3 py-1.5 -ml-3 rounded-lg hover:bg-dark-900 border border-transparent hover:border-dark-800">
+              <span className="transform group-hover:-translate-x-1 transition-transform"><Icons.ChevronLeft /></span> Return to Matrix
+            </button>
+            
+            <article className="mb-16">
+              <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6">
+                 <h1 className="text-4xl font-bold text-gray-100 leading-tight tracking-tight">{doc.title}</h1>
+                 <div className="flex gap-2 shrink-0 bg-dark-900 p-1.5 rounded-lg border border-dark-800 shadow-inner">
+                   <button onClick={onTogglePin} className={`p-2 rounded-md transition-colors border border-transparent ${isPinned ? 'text-yellow-500 bg-yellow-500/10' : 'text-gray-500 hover:text-gray-200 hover:bg-dark-800'}`} title="Pin">
+                      <Icons.Star filled={isPinned}/>
+                    </button>
+                    <button onClick={() => setViewMode('edit')} className="p-2 text-gray-500 hover:text-gray-200 hover:bg-dark-800 rounded-md transition-colors" title="Edit">
+                      <Icons.Edit />
+                    </button>
+                    <button onClick={handleDelete} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-colors" title="Delete">
+                      <Icons.Trash />
+                    </button>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 text-sm mb-12 pb-8 border-b border-dark-800">
+                  <div className="w-10 h-10 rounded-xl bg-dark-900 border border-dark-800 text-gray-400 flex items-center justify-center font-bold text-sm shadow-inner">
+                    {authorName[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-gray-200 font-medium">{authorName}</div>
+                    <div className="text-[10px] font-mono text-gray-500 tracking-wide mt-1">{new Date(doc.created).toLocaleString()}</div>
+                  </div>
+              </div>
+
+              {fileUrl && (
+                <div className="flex items-center justify-between p-4 bg-dark-900 border border-dark-800 rounded-xl mb-12 shadow-tactile">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-dark-950 rounded-lg text-accent-500 border border-dark-800"><Icons.File /></div>
+                    <span className="text-gray-300 text-sm font-mono tracking-wide">{doc.attachment}</span>
+                  </div>
+                  <a href={fileUrl} target="_blank" download className="tactile-button text-xs font-bold text-gray-300 px-5 py-2.5 rounded-lg transition-colors">
+                    Download Binary
+                  </a>
+                </div>
+              )}
+
+              <div className="prose max-w-none bg-dark-900/30 p-8 rounded-2xl border border-dark-800/50" dangerouslySetInnerHTML={{ __html: marked.parse(doc.content || '') || '<em class="text-gray-700 text-sm font-mono uppercase tracking-widest">Empty data structure.</em>' }}></div>
+            </article>
+
+            {/* Discussion Thread */}
+            <section className="border-t border-dark-800 pt-12">
+              <h3 className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest mb-8 flex items-center gap-3">
+                Discussion Matrix <span className="bg-dark-800 text-gray-300 px-2 py-0.5 rounded-full">{comments.length}</span>
+              </h3>
+              
+              <div className="space-y-6 mb-10">
+                {comments.length === 0 && <div className="text-gray-600 font-mono text-xs bg-dark-900/50 p-6 rounded-xl border border-dark-800 text-center">No communications logged.</div>}
+                {comments.map((c, i) => (
+                  <div key={c.id} className="flex gap-4 group">
+                    <div className="w-8 h-8 rounded-lg bg-dark-900 border border-dark-800 text-gray-400 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-inner group-hover:border-dark-700 transition-colors">
+                      {(c.expand?.author?.name || c.expand?.author?.email || 'A')[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 bg-dark-900/50 border border-dark-800 p-4 rounded-2xl rounded-tl-sm group-hover:bg-dark-900 transition-colors">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-semibold text-xs text-gray-200">{c.expand?.author?.name || c.expand?.author?.email || 'Unknown'}</span>
+                        <span className="text-[10px] font-mono text-gray-600">{new Date(c.created).toLocaleString()}</span>
+                      </div>
+                      <p className="text-gray-400 text-sm whitespace-pre-wrap leading-relaxed font-light">{c.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-4">
+                 <div className="w-8 h-8 rounded-lg bg-dark-800 border border-dark-700 text-gray-400 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-inner">
+                    {(user?.name || user?.email || 'U')[0].toUpperCase()}
+                 </div>
+                 <div className="flex-1 relative">
+                   <textarea value={newComment} onChange={e => setNewComment(e.target.value)} placeholder="Transmit message to team..."
+                     className="w-full bg-dark-900 border border-dark-800 rounded-xl p-4 text-sm focus:outline-none focus:border-accent-600 focus:ring-1 focus:ring-accent-600/30 resize-y min-h-[100px] text-gray-200 placeholder-gray-600 transition-all shadow-inner" />
+                   <div className="mt-3 flex justify-end">
+                     <button onClick={handleAddComment} disabled={!newComment.trim()} className="tactile-button text-gray-100 px-6 py-2.5 rounded-lg text-xs font-bold disabled:opacity-50">
+                       Transmit
+                     </button>
+                   </div>
+                 </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
