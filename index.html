@@ -38,11 +38,11 @@
           colors: {
             // Classy, premium dark palette - NO NEON
             dark: {
-              950: '#050505', 
-              900: '#0f1115', 
-              800: '#1a1d24', 
-              700: '#2a2f3a', 
-              600: '#3f4756', 
+              950: '#080a0d', 
+              900: '#12161c', 
+              800: '#1d2430', 
+              700: '#303948', 
+              600: '#4a5568', 
             },
             accent: {
               400: '#94a3b8', // Slate
@@ -93,13 +93,6 @@
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
     }
 
-    /* D3 Graph SVG styling */
-    .node circle { stroke: #2a2f3a; stroke-width: 1.5px; transition: stroke 0.3s, filter 0.3s; cursor: grab; }
-    .node circle:active { cursor: grabbing; }
-    .node:hover circle { stroke: #e5e5e5; filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.4)); }
-    .node text { font-family: 'Inter', sans-serif; font-size: 11px; fill: #94a3b8; pointer-events: none; }
-    .link { stroke: #2a2f3a; stroke-opacity: 0.8; }
-
     /* Modern Markdown Styling */
     .prose { max-width: 100%; color: #d4d4d8; }
     .prose h1, .prose h2, .prose h3 { color: #f8fafc; font-weight: 600; letter-spacing: -0.02em; }
@@ -114,6 +107,10 @@
     
     /* Preserve Vanta Container Z-Index */
     #vanta-bg { position: absolute; z-index: 0; top: 0; left: 0; width: 100%; height: 100%; }
+
+    /* Clearer surfaces: preserve the dark aesthetic without losing visual hierarchy */
+    .landing-noise { position:absolute; inset:0; z-index:1; pointer-events:none; background: radial-gradient(circle at 72% 22%, rgba(148,163,184,.10), transparent 30%), linear-gradient(180deg, rgba(5,5,5,.28), rgba(5,5,5,.72)); }
+    .demo-shell { box-shadow: 0 25px 80px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.08); background: rgba(18,22,28,.78); }
 
     .landing-noise { position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.14; background-image:radial-gradient(rgba(255,255,255,.18) .6px, transparent .6px); background-size:5px 5px; mask-image:linear-gradient(to bottom, black, transparent 85%); }
     .demo-shell { box-shadow: 0 30px 80px rgba(0,0,0,.28); }
@@ -144,6 +141,7 @@
       ChevronLeft: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
       Trash: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
       Edit: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+      Share: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
       Close: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
     };
 
@@ -294,7 +292,7 @@
           vantaEffect.current = window.VANTA.NET({
             el: vantaRef.current, mouseControls: true, touchControls: true, gyroControls: false,
             minHeight: 200, minWidth: 200, scale: 1, scaleMobile: 1,
-            color: 0x475569, backgroundColor: 0x050505, points: 12, maxDistance: 22, spacing: 16, showDots: true
+            color: 0x475569, backgroundColor: 0x080a0d, points: 12, maxDistance: 22, spacing: 16, showDots: true
           });
         }
         if (window.gsap) gsap.fromTo('.hero-enter', { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: .8, stagger: .08, ease: 'power3.out' });
@@ -795,96 +793,6 @@
       );
     }
 
-    function KnowledgeGraph({ documents, onNodeClick }) {
-      const svgRef = useRef();
-
-      useEffect(() => {
-        if (!documents || documents.length === 0 || !svgRef.current) return;
-        
-        d3.select(svgRef.current).selectAll("*").remove();
-
-        const width = svgRef.current.clientWidth;
-        const height = svgRef.current.clientHeight;
-
-        const nodes = [{ id: 'workspace_root', name: 'Root Hub', group: 1, radius: 18 }];
-        const links = [];
-
-        documents.forEach(doc => {
-           nodes.push({ id: doc.id, name: doc.title, group: 2, radius: 10, docRef: doc });
-           links.push({ source: 'workspace_root', target: doc.id });
-        });
-
-        const svg = d3.select(svgRef.current)
-            .attr("viewBox", [0, 0, width, height]);
-
-        const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(120))
-            .force("charge", d3.forceManyBody().strength(-400))
-            .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collide", d3.forceCollide().radius(d => d.radius + 15));
-
-        const link = svg.append("g")
-            .attr("class", "links")
-            .selectAll("line")
-            .data(links)
-            .enter().append("line")
-            .attr("class", "link");
-
-        const node = svg.append("g")
-            .attr("class", "nodes")
-            .selectAll("g")
-            .data(nodes)
-            .enter().append("g")
-            .attr("class", "node")
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended))
-            .on("click", (event, d) => {
-               if(d.group === 2 && onNodeClick) onNodeClick(d.docRef);
-            });
-
-        node.append("circle")
-            .attr("r", d => d.radius)
-            .attr("fill", d => d.group === 1 ? '#475569' : '#1a1d24');
-
-        node.append("text")
-            .text(d => d.name)
-            .attr('x', 16)
-            .attr('y', 4);
-
-        simulation.on("tick", () => {
-            link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
-
-            node.attr("transform", d => `translate(${d.x},${d.y})`);
-        });
-
-        function dragstarted(event, d) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x; d.fy = d.y;
-        }
-        function dragged(event, d) {
-            d.fx = event.x; d.fy = event.y;
-        }
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null; d.fy = null;
-        }
-
-      }, [documents, onNodeClick]);
-
-      return (
-        <div className="w-full h-full bg-dark-900 border border-dark-800 rounded-xl shadow-inner overflow-hidden relative">
-          <div className="absolute top-5 left-5 text-[10px] font-mono text-gray-500 uppercase tracking-widest pointer-events-none bg-dark-950/80 px-2 py-1 rounded backdrop-blur">Physics Node Map</div>
-          <svg ref={svgRef} className="w-full h-full cursor-grab active:cursor-grabbing"></svg>
-        </div>
-      );
-    }
-
     function WorkspaceView({ workspace, api, user, onSelectDocument, showToast, pinnedDocs, onTogglePin, searchInputRef }) {
       const [documents, setDocuments] = useState([]);
       const [loading, setLoading] = useState(true);
@@ -897,6 +805,23 @@
       
       const [viewMode, setViewMode] = useState('list');
       const fileInputRef = useRef(null);
+      const contentInputRef = useRef(null);
+
+      const insertFormatting = (prefix, suffix = prefix) => {
+        const el = contentInputRef.current;
+        if (!el) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const selected = newContent.slice(start, end) || 'text';
+        const replacement = `${prefix}${selected}${suffix}`;
+        const next = newContent.slice(0, start) + replacement + newContent.slice(end);
+        setNewContent(next);
+        requestAnimationFrame(() => {
+          el.focus();
+          const cursor = start + replacement.length;
+          el.setSelectionRange(cursor, cursor);
+        });
+      };
 
       const loadDocs = async () => {
         setLoading(true);
@@ -987,8 +912,7 @@
             </div>
             <div className="flex items-center gap-4 w-full md:w-auto">
               <div className="flex bg-dark-900 border border-dark-800 rounded-lg p-1 shadow-inner">
-                 <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-dark-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`} title="Grid View"><Icons.Grid/></button>
-                 <button onClick={() => setViewMode('graph')} className={`p-2 rounded-md transition-all ${viewMode === 'graph' ? 'bg-dark-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`} title="Knowledge Graph View"><Icons.Network/></button>
+                 <button onClick={() => setViewMode('list')} className="px-3 py-2 rounded-md bg-dark-700 text-white text-xs font-medium flex items-center gap-2"><Icons.Grid/> Documents</button>
               </div>
               <div className="relative w-full md:w-72 group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500"><Icons.Search/></div>
@@ -1003,7 +927,7 @@
 
           <div className="flex-1 overflow-y-auto p-10 bg-dark-950">
             
-            {/* Live Document Editor Sandbox */}
+            {/* New Document Editor */}
             {!isDrafting ? (
               <div className="mb-10">
                 <button onClick={() => setIsDrafting(true)} className="w-full py-5 border-2 border-dashed border-dark-700 hover:border-accent-600 rounded-xl text-center flex items-center justify-center gap-3 transition-all duration-200 group bg-dark-900/50 hover:bg-dark-900">
@@ -1015,7 +939,7 @@
               <form onSubmit={handleCreate} className="bg-dark-900 border border-dark-700 rounded-2xl overflow-hidden mb-12 shadow-float">
                 <div className="bg-dark-950 border-b border-dark-800 px-5 py-3 flex items-center justify-between">
                    <div className="text-[10px] font-mono text-accent-400 uppercase tracking-widest flex items-center gap-2">
-                     <span className="w-2 h-2 rounded-full bg-accent-500 animate-pulse"></span> Split-Pane Live Editor
+                     <span className="w-2 h-2 rounded-full bg-accent-500 animate-pulse"></span> Document Editor
                   </div>
                   <button type="button" onClick={() => setIsDrafting(false)} className="text-gray-500 hover:text-white transition-colors bg-dark-800 p-1.5 rounded-md"><Icons.Close/></button>
                 </div>
@@ -1023,15 +947,26 @@
                 <input type="text" placeholder="Document Title" required value={newTitle} onChange={e => setNewTitle(e.target.value)}
                   className="w-full px-8 py-5 bg-transparent border-b border-dark-800 focus:ring-0 font-bold text-2xl outline-none placeholder-gray-700 text-gray-100" />
                 
-                <div className="flex flex-col md:flex-row min-h-[400px]">
-                  <div className="flex-1 border-r border-dark-800 relative bg-dark-950/50">
-                    <textarea placeholder="Write markdown here... Use # for headers, **bold**, etc." value={newContent} onChange={e => setNewContent(e.target.value)}
-                      className="w-full h-full p-8 bg-transparent border-none focus:ring-0 outline-none resize-none placeholder-gray-700 text-gray-300 font-mono text-sm leading-relaxed"></textarea>
-                  </div>
-                  <div className="flex-1 relative bg-dark-900 overflow-y-auto max-h-[500px]">
-                    {/* Live Markdown Render Output */}
-                    <div className="prose max-w-none p-8" dangerouslySetInnerHTML={{ __html: marked.parse(newContent) || '<em class="text-gray-700 text-sm font-mono tracking-widest uppercase">Live rendering engine waiting for input...</em>' }}></div>
-                  </div>
+                <div className="border-b border-dark-800 bg-dark-900 px-5 py-3 flex flex-wrap items-center gap-2">
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-gray-600 mr-2">Formatting</span>
+                  {[
+                    ['B', 'Bold', '**'],
+                    ['I', 'Italic', '_'],
+                    ['H', 'Heading', '# '],
+                    ['•', 'Bullet list', '- '],
+                    ['<>', 'Code', '`']
+                  ].map(([label,title,token]) => (
+                    <button key={title} type="button" title={title} onClick={() => insertFormatting(token)}
+                      className="min-w-8 h-8 px-2 rounded-md border border-dark-700 bg-dark-950 hover:bg-dark-800 hover:border-dark-600 text-gray-300 text-xs font-semibold transition-colors">
+                      {label}
+                    </button>
+                  ))}
+                  <button type="button" title="Link" onClick={() => insertFormatting('[', '](https://)')}
+                    className="h-8 px-3 rounded-md border border-dark-700 bg-dark-950 hover:bg-dark-800 hover:border-dark-600 text-gray-400 text-xs transition-colors">Link</button>
+                </div>
+                <div className="min-h-[360px] bg-dark-950/50">
+                  <textarea ref={contentInputRef} placeholder="Start writing your document..." value={newContent} onChange={e => setNewContent(e.target.value)}
+                    className="w-full h-[360px] p-8 bg-transparent border-none focus:ring-0 outline-none resize-none placeholder-gray-700 text-gray-300 text-sm leading-relaxed"></textarea>
                 </div>
                 
                 <div className="flex items-center justify-between p-5 border-t border-dark-800 bg-dark-950">
@@ -1065,10 +1000,6 @@
                    <p className="text-gray-500 font-mono text-xs uppercase tracking-widest">Null Array. Initialize your first document.</p>
                 </div>
               )
-            ) : viewMode === 'graph' ? (
-               <div className="h-[600px] w-full">
-                  <KnowledgeGraph documents={documents} onNodeClick={onSelectDocument} />
-               </div>
             ) : (
               <div className="space-y-10">
                 {pinned.length > 0 && (
@@ -1139,6 +1070,22 @@
         } catch (err) { showToast('Error during purge.'); }
       };
 
+      const handleShare = async () => {
+        const url = `${window.location.origin}${window.location.pathname}?document=${encodeURIComponent(doc.id)}`;
+        try {
+          if (navigator.share) {
+            await navigator.share({ title: doc.title, text: `View ${doc.title} in NexusDocs`, url });
+          } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(url);
+            showToast('Document link copied to clipboard.');
+          } else {
+            window.prompt('Copy this document link:', url);
+          }
+        } catch (err) {
+          if (err?.name !== 'AbortError') showToast('Could not share document.');
+        }
+      };
+
       const handleAddComment = async () => {
         if (!newComment.trim()) return;
         try {
@@ -1198,6 +1145,9 @@
                     </button>
                     <button onClick={() => setViewMode('edit')} className="p-2 text-gray-500 hover:text-gray-200 hover:bg-dark-800 rounded-md transition-colors" title="Edit">
                       <Icons.Edit />
+                    </button>
+                    <button onClick={handleShare} className="p-2 text-gray-500 hover:text-gray-200 hover:bg-dark-800 rounded-md transition-colors" title="Share document">
+                      <Icons.Share />
                     </button>
                     <button onClick={handleDelete} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-colors" title="Delete">
                       <Icons.Trash />
