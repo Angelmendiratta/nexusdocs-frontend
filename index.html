@@ -807,6 +807,10 @@
       const fileInputRef = useRef(null);
       const contentInputRef = useRef(null);
 
+      // Prevent an older workspace request from overwriting the currently
+      // selected workspace when requests finish out of order.
+      const docsRequestRef = useRef(0);
+
       const insertFormatting = (prefix, suffix = prefix) => {
         const el = contentInputRef.current;
         if (!el) return;
@@ -823,17 +827,61 @@
         });
       };
 
-      const loadDocs = async () => {
+      const loadDocs = async (workspaceId = workspace.id) => {
+        const requestId = ++docsRequestRef.current;
         setLoading(true);
+
         try {
-          const filter = encodeURIComponent(`workspace='${workspace.id}'`);
-          const res = await api(`/api/collections/documents/records?filter=${filter}&sort=-created&expand=author`);
-          setDocuments(res.items || []);
-        } catch (err) { showToast('Error fetching documents.'); } 
-        finally { setLoading(false); }
+          // Use the workspace id captured at the start of this request.
+          // The extra client-side filter is intentional: it prevents records
+          // from another workspace from ever being rendered if the API returns
+          // stale/unfiltered data.
+          const filter = encodeURIComponent(`workspace='${workspaceId}'`);
+          const res = await api(
+            `/api/collections/documents/records?filter=${filter}&sort=-created&expand=author,workspace`
+          );
+
+          // Ignore a response that belongs to an older workspace/request.
+          if (requestId !== docsRequestRef.current || workspace.id !== workspaceId) {
+            return;
+          }
+
+          const items = (res.items || []).filter(doc => {
+            const relation = doc.workspace;
+            const relationId = typeof relation === 'string'
+              ? relation
+              : relation?.id;
+            return relationId === workspaceId;
+          });
+
+          setDocuments(items);
+        } catch (err) {
+          if (requestId === docsRequestRef.current && workspace.id === workspaceId) {
+            showToast('Error fetching documents.');
+          }
+        } finally {
+          if (requestId === docsRequestRef.current) {
+            setLoading(false);
+          }
+        }
       };
 
-      useEffect(() => { loadDocs(); setIsDrafting(false); setViewMode('list'); }, [workspace.id]);
+      useEffect(() => {
+        // Invalidate every request belonging to the previous workspace.
+        docsRequestRef.current += 1;
+        setDocuments([]);
+        setSearchQuery('');
+        setIsDrafting(false);
+        setViewMode('list');
+
+        const workspaceId = workspace.id;
+        loadDocs(workspaceId);
+
+        return () => {
+          // Anything still in flight for this workspace is now stale.
+          docsRequestRef.current += 1;
+        };
+      }, [workspace.id]);
 
       // Trigger Prism.js syntax highlighting when typing in the live editor
       useEffect(() => {
@@ -859,7 +907,13 @@
           await api('/api/collections/activity_log/records', { method: 'POST', body: JSON.stringify({ action: 'document_created', details: newTitle, user: user.id, workspace: workspace.id }) }).catch(()=>{});
 
           setNewTitle(''); setNewContent(''); if(fileInputRef.current) fileInputRef.current.value = '';
-          setIsDrafting(false); showToast('Document committed.'); loadDocs();
+          setIsDrafting(false);
+          showToast('Document committed.');
+
+          // Reload only the workspace that was active when the document was
+          // created. If the user switched workspaces while saving, the
+          // request will be discarded by loadDocs().
+          loadDocs(workspace.id);
         } catch (err) { showToast(`Error: ${err.message}`); } 
         finally { setCreating(false); }
       };
