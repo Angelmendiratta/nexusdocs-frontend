@@ -540,12 +540,26 @@
       const [activeWorkspace, setActiveWorkspace] = useState(null);
       const [activeDocument, setActiveDocument] = useState(null);
       const [showActivityLog, setShowActivityLog] = useState(false);
+      const [myRole, setMyRole] = useState(null);
       const searchInputRef = useRef(null);
 
       const [pinnedDocs, setPinnedDocs] = useState(() => JSON.parse(localStorage.getItem('nd_pinned') || '[]'));
 
       useEffect(() => { loadWorkspaces(); }, []);
       useEffect(() => { localStorage.setItem('nd_pinned', JSON.stringify(pinnedDocs)); }, [pinnedDocs]);
+
+      useEffect(() => {
+        let cancelled = false;
+        if (!activeWorkspace) {
+          setMyRole(null);
+          return;
+        }
+        setMyRole(null);
+        fetchMyRole(api, activeWorkspace, user.id).then(role => {
+          if (!cancelled) setMyRole(role);
+        });
+        return () => { cancelled = true; };
+      }, [activeWorkspace?.id, user.id]);
 
       // Global Keyboard Shortcut: Ctrl+K
       useEffect(() => {
@@ -592,12 +606,12 @@
               <ActivityDashboard api={api} />
             ) : activeWorkspace ? (
               activeDocument ? (
-                <DocumentDetail workspace={activeWorkspace} doc={activeDocument} api={api} user={user}
+                <DocumentDetail workspace={activeWorkspace} doc={activeDocument} api={api} user={user} myRole={myRole}
                   onBack={() => setActiveDocument(null)} onUpdate={(updatedDoc) => setActiveDocument(updatedDoc)}
                   onDelete={() => setActiveDocument(null)} showToast={showToast} 
                   isPinned={pinnedDocs.includes(activeDocument.id)} onTogglePin={() => togglePin(activeDocument.id)} />
               ) : (
-                <WorkspaceView workspace={activeWorkspace} api={api} user={user} onSelectDocument={setActiveDocument} showToast={showToast} pinnedDocs={pinnedDocs} onTogglePin={togglePin} searchInputRef={searchInputRef} />
+                <WorkspaceView workspace={activeWorkspace} api={api} user={user} myRole={myRole} onSelectDocument={setActiveDocument} showToast={showToast} pinnedDocs={pinnedDocs} onTogglePin={togglePin} searchInputRef={searchInputRef} />
               )
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-gray-600 bg-dark-900/30">
@@ -793,7 +807,7 @@
       );
     }
 
-    function WorkspaceView({ workspace, api, user, onSelectDocument, showToast, pinnedDocs, onTogglePin, searchInputRef }) {
+    function WorkspaceView({ workspace, api, user, myRole, onSelectDocument, showToast, pinnedDocs, onTogglePin, searchInputRef }) {
       const [documents, setDocuments] = useState([]);
       const [loading, setLoading] = useState(true);
       const [searchQuery, setSearchQuery] = useState('');
@@ -804,6 +818,7 @@
       const [creating, setCreating] = useState(false);
       
       const [viewMode, setViewMode] = useState('list');
+      const [showMembers, setShowMembers] = useState(false);
       const fileInputRef = useRef(null);
       const contentInputRef = useRef(null);
 
@@ -947,6 +962,9 @@
               <div className="flex bg-dark-900 border border-dark-800 rounded-lg p-1 shadow-inner">
                  <button onClick={() => setViewMode('list')} className="px-3 py-2 rounded-md bg-dark-700 text-white text-xs font-medium flex items-center gap-2"><Icons.Grid/> Documents</button>
               </div>
+              <button onClick={() => setShowMembers(true)} className="px-3 py-2.5 bg-dark-900 border border-dark-800 rounded-lg text-xs text-gray-400 hover:text-gray-200 hover:bg-dark-800 transition-colors">
+                Members
+              </button>
               <div className="relative w-full md:w-72 group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500"><Icons.Search/></div>
                 <input type="text" ref={searchInputRef} placeholder="Search matrix..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
@@ -960,8 +978,8 @@
 
           <div className="flex-1 overflow-y-auto p-10 bg-dark-950">
             
-            {/* New Document Editor */}
-            {!isDrafting ? (
+            {/* New Document Editor — viewers cannot create documents */}
+            {canEdit(myRole) && (!isDrafting ? (
               <div className="mb-10">
                 <button onClick={() => setIsDrafting(true)} className="w-full py-5 border-2 border-dashed border-dark-700 hover:border-accent-600 rounded-xl text-center flex items-center justify-center gap-3 transition-all duration-200 group bg-dark-900/50 hover:bg-dark-900">
                   <div className="text-gray-500 group-hover:text-accent-400 transition-colors p-1 bg-dark-950 rounded-md border border-dark-800 group-hover:border-accent-600"><Icons.Plus /></div>
@@ -1001,6 +1019,11 @@
                   </div>
                 </div>
               </form>
+            ))}
+
+            {showMembers && (
+              <MembersPanel workspace={workspace} api={api} user={user} role={myRole}
+                onClose={() => setShowMembers(false)} showToast={showToast} />
             )}
 
             {/* Content Display */}
@@ -1042,7 +1065,153 @@
       );
     }
 
-    function DocumentDetail({ workspace, doc, api, user, onBack, onUpdate, onDelete, showToast, isPinned, onTogglePin }) {
+    // ========================= RBAC HELPERS =========================
+    async function fetchMyRole(api, workspace, userId) {
+      if (workspace.owner === userId) return 'owner';
+      try {
+        const filter = encodeURIComponent(`workspace='${workspace.id}' && user='${userId}'`);
+        const res = await api(`/api/collections/workspace_members/records?filter=${filter}`);
+        const row = (res.items || [])[0];
+        return row ? row.role : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function canEdit(role) { return role === 'owner' || role === 'editor'; }
+    function canManageMembers(role) { return role === 'owner'; }
+
+    function MembersPanel({ workspace, api, user, role, onClose, showToast }) {
+      const [members, setMembers] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [inviteEmail, setInviteEmail] = useState('');
+      const [inviteRole, setInviteRole] = useState('editor');
+      const [inviting, setInviting] = useState(false);
+
+      const loadMembers = async () => {
+        setLoading(true);
+        try {
+          const filter = encodeURIComponent(`workspace='${workspace.id}'`);
+          const res = await api(`/api/collections/workspace_members/records?filter=${filter}&expand=user`);
+          setMembers(res.items || []);
+        } catch (err) {
+          showToast('Could not load members.');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        loadMembers();
+      }, [workspace.id]);
+
+      const handleInvite = async (e) => {
+        e.preventDefault();
+        if (!canManageMembers(role) || !inviteEmail.trim()) return;
+        setInviting(true);
+        try {
+          const filter = encodeURIComponent(`email='${inviteEmail.trim()}'`);
+          const lookup = await api(`/api/collections/users/records?filter=${filter}`);
+          const targetUser = (lookup.items || [])[0];
+          if (!targetUser) {
+            showToast('No user found with that email. They need to sign up first.');
+            return;
+          }
+
+          // Prevent duplicate membership rows from being added.
+          const existingFilter = encodeURIComponent(`workspace='${workspace.id}' && user='${targetUser.id}'`);
+          const existing = await api(`/api/collections/workspace_members/records?filter=${existingFilter}`);
+          if ((existing.items || []).length > 0) {
+            showToast('That user is already a workspace member.');
+            return;
+          }
+
+          await api('/api/collections/workspace_members/records', {
+            method: 'POST',
+            body: JSON.stringify({ workspace: workspace.id, user: targetUser.id, role: inviteRole }),
+          });
+          setInviteEmail('');
+          await loadMembers();
+          showToast('Member added.');
+        } catch (err) {
+          showToast('Failed to add member: ' + err.message);
+        } finally {
+          setInviting(false);
+        }
+      };
+
+      const handleRemove = async (memberId) => {
+        if (!canManageMembers(role)) return;
+        if (!window.confirm('Remove this member from the workspace?')) return;
+        try {
+          await api(`/api/collections/workspace_members/records/${memberId}`, { method: 'DELETE' });
+          await loadMembers();
+          showToast('Member removed.');
+        } catch (err) {
+          showToast('Failed to remove: ' + err.message);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/70 backdrop-blur-md">
+          <div className="relative w-full max-w-lg glass-panel rounded-2xl shadow-float p-8 border border-dark-700/50">
+            <button onClick={onClose} className="absolute top-5 right-5 text-gray-500 hover:text-gray-300 p-1 rounded-md hover:bg-dark-800">
+              <Icons.Close />
+            </button>
+            <h2 className="text-xl font-bold text-gray-100 mb-1">Workspace Members</h2>
+            <p className="text-gray-500 text-sm mb-2">{workspace.wname}</p>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-gray-600 mb-6">Your role: {role || 'none'}</p>
+
+            {canManageMembers(role) && (
+              <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2 mb-6">
+                <input
+                  type="email"
+                  placeholder="member@email.com"
+                  value={inviteEmail}
+                  onChange={e => setInviteEmail(e.target.value)}
+                  className="flex-1 px-3 py-2 bg-dark-900 border border-dark-700 rounded-lg text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent-500"
+                />
+                <select
+                  value={inviteRole}
+                  onChange={e => setInviteRole(e.target.value)}
+                  className="px-3 py-2 bg-dark-900 border border-dark-700 rounded-lg text-sm text-gray-300"
+                >
+                  <option value="editor">Editor</option>
+                  <option value="viewer">Viewer</option>
+                </select>
+                <button type="submit" disabled={inviting} className="tactile-button px-4 py-2 rounded-lg text-sm font-semibold text-gray-100">
+                  {inviting ? '…' : 'Add'}
+                </button>
+              </form>
+            )}
+
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {loading ? (
+                <div className="text-gray-600 text-xs font-mono py-4 text-center">Loading…</div>
+              ) : members.length === 0 ? (
+                <div className="text-gray-600 text-xs font-mono py-4 text-center">No members added yet.</div>
+              ) : (
+                members.map(m => (
+                  <div key={m.id} className="flex items-center justify-between bg-dark-900/50 border border-dark-800 rounded-lg px-4 py-2.5">
+                    <div>
+                      <div className="text-sm text-gray-200">{m.expand?.user?.name || m.expand?.user?.email || m.user}</div>
+                      <div className="text-[10px] font-mono text-gray-500 uppercase">{m.role}</div>
+                    </div>
+                    {canManageMembers(role) && (
+                      <button onClick={() => handleRemove(m.id)} className="text-gray-600 hover:text-red-400 p-1.5 rounded-md hover:bg-red-400/10" title="Remove member">
+                        <Icons.Trash />
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function DocumentDetail({ workspace, doc, api, user, myRole, onBack, onUpdate, onDelete, showToast, isPinned, onTogglePin }) {
       const [comments, setComments] = useState([]);
       const [newComment, setNewComment] = useState('');
       const [editTitle, setEditTitle] = useState(doc.title);
@@ -1154,15 +1323,19 @@
                    <button onClick={onTogglePin} className={`p-2 rounded-md transition-colors border border-transparent ${isPinned ? 'text-yellow-500 bg-yellow-500/10' : 'text-gray-500 hover:text-gray-200 hover:bg-dark-800'}`} title="Pin">
                       <Icons.Star filled={isPinned}/>
                     </button>
-                    <button onClick={() => setViewMode('edit')} className="p-2 text-gray-500 hover:text-gray-200 hover:bg-dark-800 rounded-md transition-colors" title="Edit">
-                      <Icons.Edit />
-                    </button>
+                    {canEdit(myRole) && (
+                      <button onClick={() => setViewMode('edit')} className="p-2 text-gray-500 hover:text-gray-200 hover:bg-dark-800 rounded-md transition-colors" title="Edit">
+                        <Icons.Edit />
+                      </button>
+                    )}
                     <button onClick={handleShare} className="p-2 text-gray-500 hover:text-gray-200 hover:bg-dark-800 rounded-md transition-colors" title="Share document">
                       <Icons.Share />
                     </button>
-                    <button onClick={handleDelete} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-colors" title="Delete">
-                      <Icons.Trash />
-                    </button>
+                    {canEdit(myRole) && (
+                      <button onClick={handleDelete} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-colors" title="Delete">
+                        <Icons.Trash />
+                      </button>
+                    )}
                 </div>
               </div>
               
