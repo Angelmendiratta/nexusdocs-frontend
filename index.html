@@ -1072,7 +1072,7 @@
         const filter = encodeURIComponent(`workspace='${workspace.id}' && user='${userId}'`);
         const res = await api(`/api/collections/workspace_members/records?filter=${filter}`);
         const row = (res.items || [])[0];
-        return row ? row.role : null;
+        return row ? row.member_role : null;
       } catch {
         return null;
       }
@@ -1128,7 +1128,7 @@
 
           await api('/api/collections/workspace_members/records', {
             method: 'POST',
-            body: JSON.stringify({ workspace: workspace.id, user: targetUser.id, role: inviteRole }),
+            body: JSON.stringify({ workspace: workspace.id, user: targetUser.id, member_role: inviteRole }),
           });
           setInviteEmail('');
           await loadMembers();
@@ -1195,7 +1195,7 @@
                   <div key={m.id} className="flex items-center justify-between bg-dark-900/50 border border-dark-800 rounded-lg px-4 py-2.5">
                     <div>
                       <div className="text-sm text-gray-200">{m.expand?.user?.name || m.expand?.user?.email || m.user}</div>
-                      <div className="text-[10px] font-mono text-gray-500 uppercase">{m.role}</div>
+                      <div className="text-[10px] font-mono text-gray-500 uppercase">{m.member_role}</div>
                     </div>
                     {canManageMembers(role) && (
                       <button onClick={() => handleRemove(m.id)} className="text-gray-600 hover:text-red-400 p-1.5 rounded-md hover:bg-red-400/10" title="Remove member">
